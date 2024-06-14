@@ -9,14 +9,14 @@ import {
 } from '@nestjs/common'
 
 import { TodosService } from './todos.service'
-import { TodoItem } from 'types/todos'
+import type { TodoItem } from 'types/todos'
 
 @Controller('todos')
 export class TodosController {
   constructor(private readonly todosService: TodosService) {}
 
   @Post()
-  create(@Body() todo: TodoItem) {
+  create(@Body() todo: TodoItem): TodoItem {
     return this.todosService.create(todo)
   }
 

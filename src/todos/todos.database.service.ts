@@ -1,54 +1,40 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
-import { initialTodos } from 'mocks/todos'
-import { TodoItem } from 'types/todos'
+import { initialTodos } from './mocks'
+import type { TodoItem, Todos } from 'types/todos'
 
 @Injectable()
 export class TodosDatabaseService {
-  static todos: TodoItem[] = initialTodos
-
-  private findIndexById(id: string): number {
-    const todoIndex = TodosDatabaseService.todos.findIndex(
-      (todo) => todo.id === id,
-    )
-
-    if (todoIndex === -1) {
-      throw new NotFoundException(`TodoItem with id ${id} not found`)
-    }
-
-    return todoIndex
-  }
+  static todos: Todos = initialTodos
 
   create(todoItem: TodoItem): TodoItem {
-    TodosDatabaseService.todos.push(todoItem)
+    TodosDatabaseService.todos.set(todoItem.id, todoItem)
     return todoItem
   }
 
   getAll(): TodoItem[] {
-    return TodosDatabaseService.todos
+    return Array.from(TodosDatabaseService.todos.values())
   }
 
   getById(id: string): TodoItem {
-    const todoIndex = this.findIndexById(id)
-    return TodosDatabaseService.todos[todoIndex]
+    const todoItem = TodosDatabaseService.todos.get(id)
+    if (!todoItem) {
+      throw new NotFoundException(`TodoItem with id ${id} not found`)
+    }
+    return todoItem
   }
 
   update(id: string, newParams: Partial<TodoItem>): TodoItem {
-    const todoIndex = this.findIndexById(id)
+    const todoItem = this.getById(id)
 
-    const updatedTodo = {
-      ...TodosDatabaseService.todos[todoIndex],
-      ...newParams,
-    }
-    TodosDatabaseService.todos[todoIndex] = updatedTodo
+    const updatedTodo = { ...todoItem, ...newParams }
+    TodosDatabaseService.todos.set(id, updatedTodo)
 
     return updatedTodo
   }
 
   delete(id: string): TodoItem {
-    const todoIndex = this.findIndexById(id)
-
-    const [deletedTodo] = TodosDatabaseService.todos.splice(todoIndex, 1)
-
-    return deletedTodo
+    const todoItem = this.getById(id)
+    TodosDatabaseService.todos.delete(id)
+    return todoItem
   }
 }

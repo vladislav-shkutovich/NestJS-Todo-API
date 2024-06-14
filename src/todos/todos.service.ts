@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common'
 import { TodosDatabaseService } from './todos.database.service'
-import { TodoItem } from 'types/todos'
+import type { TodoItem } from 'types/todos'
 
 @Injectable()
 export class TodosService {
   constructor(private readonly todosDatabaseService: TodosDatabaseService) {}
 
-  create(todoItem: TodoItem) {
+  create(todoItem: TodoItem): TodoItem {
     return this.todosDatabaseService.create(todoItem)
   }
 
