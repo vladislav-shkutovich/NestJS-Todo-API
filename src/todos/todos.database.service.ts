@@ -5,8 +5,8 @@ import {
   OnModuleInit,
   OnModuleDestroy,
 } from '@nestjs/common'
-import * as path from 'path'
-import * as fs from 'fs/promises'
+import { resolve } from 'path'
+import { readFile, writeFile } from 'node:fs/promises'
 
 import type { TodoItem, Todos } from 'types/todos'
 
@@ -14,7 +14,7 @@ import type { TodoItem, Todos } from 'types/todos'
 export class TodosDatabaseService implements OnModuleInit, OnModuleDestroy {
   private static todos: Todos = new Map()
 
-  private readonly todosFilePath: string = path.resolve(
+  private readonly todosFilePath: string = resolve(
     __dirname,
     '../../../todos.json',
   )
@@ -29,7 +29,7 @@ export class TodosDatabaseService implements OnModuleInit, OnModuleDestroy {
 
   private async loadTodosFromFile() {
     try {
-      const todosFile = await fs.readFile(this.todosFilePath, 'utf8')
+      const todosFile = await readFile(this.todosFilePath, 'utf8')
       const todos = JSON.parse(todosFile)
       for (const id in todos) {
         if (todos.hasOwnProperty(id)) {
@@ -46,7 +46,7 @@ export class TodosDatabaseService implements OnModuleInit, OnModuleDestroy {
       const todosToJson = JSON.stringify(
         Object.fromEntries(TodosDatabaseService.todos),
       )
-      await fs.writeFile(this.todosFilePath, todosToJson, 'utf8')
+      await writeFile(this.todosFilePath, todosToJson, 'utf8')
     } catch (error) {
       throw new InternalServerErrorException(`Files saving failed. ${error}.`)
     }
