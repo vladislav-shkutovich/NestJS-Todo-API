@@ -5,13 +5,13 @@ import {
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
 import { Model } from 'mongoose'
-import type { TodoItem } from './schemas/todos.schema'
+import type { Todo } from './schemas/todos.schema'
 
 @Injectable()
 export class TodosDatabaseService {
-  constructor(@InjectModel('TodoItem') private todoModel: Model<TodoItem>) {}
+  constructor(@InjectModel('Todo') private todoModel: Model<Todo>) {}
 
-  async create(todo: TodoItem): Promise<TodoItem> {
+  async create(todo: Todo): Promise<Todo> {
     try {
       const createdTodo = new this.todoModel(todo)
       return createdTodo.save()
@@ -20,7 +20,7 @@ export class TodosDatabaseService {
     }
   }
 
-  async getAll(): Promise<TodoItem[]> {
+  async getAll(): Promise<Todo[]> {
     try {
       return this.todoModel.find().exec()
     } catch (error) {
@@ -28,11 +28,11 @@ export class TodosDatabaseService {
     }
   }
 
-  async getById(id: string): Promise<TodoItem> {
+  async getById(id: string): Promise<Todo> {
     try {
       const todo = await this.todoModel.findById(id).exec()
       if (!todo) {
-        throw new NotFoundException(`TodoItem with id ${id} not found`)
+        throw new NotFoundException(`Todo with id ${id} not found`)
       }
       return todo
     } catch (error) {
@@ -40,13 +40,13 @@ export class TodosDatabaseService {
     }
   }
 
-  async update(id: string, newParams: Partial<TodoItem>): Promise<TodoItem> {
+  async update(id: string, newParams: Partial<Todo>): Promise<Todo> {
     try {
       const updatedTodo = await this.todoModel
         .findByIdAndUpdate(id, newParams, { new: true })
         .exec()
       if (!updatedTodo) {
-        throw new NotFoundException(`TodoItem with id ${id} not found`)
+        throw new NotFoundException(`Todo with id ${id} not found`)
       }
       return updatedTodo
     } catch (error) {
@@ -54,11 +54,11 @@ export class TodosDatabaseService {
     }
   }
 
-  async delete(id: string): Promise<TodoItem> {
+  async delete(id: string): Promise<Todo> {
     try {
       const deletedTodo = await this.todoModel.findByIdAndDelete(id).exec()
       if (!deletedTodo) {
-        throw new NotFoundException(`TodoItem with id ${id} not found`)
+        throw new NotFoundException(`Todo with id ${id} not found`)
       }
       return deletedTodo
     } catch (error) {

@@ -1,11 +1,11 @@
 import { Schema, Document } from 'mongoose'
 
-export const TodoItemSchema = new Schema({
+export const TodoSchema = new Schema({
   title: { type: String, required: true },
   description: String,
 })
 
-export interface TodoItem extends Document {
+export interface Todo extends Document {
   title: string
   description?: string
 }
