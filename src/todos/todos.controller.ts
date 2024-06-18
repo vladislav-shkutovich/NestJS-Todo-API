@@ -8,9 +8,10 @@ import {
   Post,
 } from '@nestjs/common'
 import { TodosService } from './todos.service'
+import { TODOS_ROUTE } from 'src/common/constants/routing.constants'
 import type { Todo } from './schemas/todos.schema'
 
-@Controller('todos')
+@Controller(TODOS_ROUTE)
 export class TodosController {
   constructor(private readonly todosService: TodosService) {}
 

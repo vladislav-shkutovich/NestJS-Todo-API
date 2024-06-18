@@ -5,11 +5,12 @@ import {
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
 import { Model } from 'mongoose'
+import { TODO_MODEL } from 'src/common/constants/database.constants'
 import type { Todo } from './schemas/todos.schema'
 
 @Injectable()
 export class TodosDatabaseService {
-  constructor(@InjectModel('Todo') private todoModel: Model<Todo>) {}
+  constructor(@InjectModel(TODO_MODEL) private todoModel: Model<Todo>) {}
 
   async create(todo: Todo): Promise<Todo> {
     try {
