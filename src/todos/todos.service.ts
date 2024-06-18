@@ -1,28 +1,28 @@
 import { Injectable } from '@nestjs/common'
 import { TodosDatabaseService } from './todos.database.service'
-import type { TodoItem } from 'types/todos'
+import type { TodoItem } from './schemas/todos.schema'
 
 @Injectable()
 export class TodosService {
   constructor(private readonly todosDatabaseService: TodosDatabaseService) {}
 
-  create(todoItem: TodoItem): TodoItem {
+  async create(todoItem: TodoItem): Promise<TodoItem> {
     return this.todosDatabaseService.create(todoItem)
   }
 
-  getAll(): TodoItem[] {
+  async getAll(): Promise<TodoItem[]> {
     return this.todosDatabaseService.getAll()
   }
 
-  getById(id: string): TodoItem {
+  async getById(id: string): Promise<TodoItem> {
     return this.todosDatabaseService.getById(id)
   }
 
-  update(id: string, newParams: Partial<TodoItem>): TodoItem {
+  async update(id: string, newParams: Partial<TodoItem>): Promise<TodoItem> {
     return this.todosDatabaseService.update(id, newParams)
   }
 
-  delete(id: string): TodoItem {
+  async delete(id: string): Promise<TodoItem> {
     return this.todosDatabaseService.delete(id)
   }
 }

@@ -9,37 +9,37 @@ import {
 } from '@nestjs/common'
 
 import { TodosService } from './todos.service'
-import type { TodoItem } from 'types/todos'
+import type { TodoItem } from './schemas/todos.schema'
 
 @Controller('todos')
 export class TodosController {
   constructor(private readonly todosService: TodosService) {}
 
   @Post()
-  create(@Body() todo: TodoItem): TodoItem {
+  async create(@Body() todo: TodoItem): Promise<TodoItem> {
     return this.todosService.create(todo)
   }
 
   @Get()
-  getAll(): TodoItem[] {
+  async getAll(): Promise<TodoItem[]> {
     return this.todosService.getAll()
   }
 
   @Get(':id')
-  getById(@Param('id') id: string): TodoItem {
+  async getById(@Param('id') id: string): Promise<TodoItem> {
     return this.todosService.getById(id)
   }
 
   @Patch(':id')
-  update(
+  async update(
     @Param('id') id: string,
     @Body() newParams: Partial<TodoItem>,
-  ): TodoItem {
+  ): Promise<TodoItem> {
     return this.todosService.update(id, newParams)
   }
 
   @Delete(':id')
-  delete(@Param('id') id: string): TodoItem {
+  async delete(@Param('id') id: string): Promise<TodoItem> {
     return this.todosService.delete(id)
   }
 }
