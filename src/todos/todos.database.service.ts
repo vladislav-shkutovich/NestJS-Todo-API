@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  InternalServerErrorException,
-} from '@nestjs/common'
+import { Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
 import { Model } from 'mongoose'
 import { TODO_MODEL } from 'src/common/constants/database.constants'
@@ -13,56 +9,25 @@ export class TodosDatabaseService {
   constructor(@InjectModel(TODO_MODEL) private todoModel: Model<Todo>) {}
 
   async create(todo: Todo): Promise<Todo> {
-    try {
-      const createdTodo = new this.todoModel(todo)
-      return await createdTodo.save()
-    } catch (error) {
-      throw new InternalServerErrorException(`Failed to create todo. ${error}`)
-    }
+    const createdTodo = new this.todoModel(todo)
+    return await createdTodo.save()
   }
 
   async getAll(): Promise<Todo[]> {
-    try {
-      return await this.todoModel.find().exec()
-    } catch (error) {
-      throw new InternalServerErrorException(`Failed to get todos. ${error}`)
-    }
+    return await this.todoModel.find().exec()
   }
 
   async getById(id: string): Promise<Todo> {
-    try {
-      const todo = await this.todoModel.findById(id).exec()
-      if (!todo) {
-        throw new NotFoundException(`Todo with id ${id} not found`)
-      }
-      return todo
-    } catch (error) {
-      throw new InternalServerErrorException(`Failed to get todo. ${error}`)
-    }
+    return await this.todoModel.findById(id).exec()
   }
 
   async update(id: string, newParams: Partial<Todo>): Promise<Todo> {
-    try {
-      const updatedTodo = await this.todoModel
-        .findByIdAndUpdate(id, newParams, { new: true })
-        .exec()
-      if (!updatedTodo) {
-        throw new NotFoundException(`Todo with id ${id} not found`)
-      }
-      return updatedTodo
-    } catch (error) {
-      throw new InternalServerErrorException(`Failed to update todo. ${error}`)
-    }
+    return await this.todoModel
+      .findByIdAndUpdate(id, newParams, { new: true })
+      .exec()
   }
 
   async delete(id: string): Promise<void> {
-    try {
-      const deletedTodo = await this.todoModel.findByIdAndDelete(id).exec()
-      if (!deletedTodo) {
-        throw new NotFoundException(`Todo with id ${id} not found`)
-      }
-    } catch (error) {
-      throw new InternalServerErrorException(`Failed to delete todo. ${error}`)
-    }
+    await this.todoModel.findByIdAndDelete(id).exec()
   }
 }

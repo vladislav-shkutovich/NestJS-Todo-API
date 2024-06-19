@@ -23,6 +23,6 @@ export class TodosService {
   }
 
   async delete(id: string): Promise<void> {
-    return await this.todosDatabaseService.delete(id)
+    await this.todosDatabaseService.delete(id)
   }
 }
