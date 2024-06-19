@@ -17,17 +17,17 @@ export class TodosController {
 
   @Post()
   async create(@Body() todo: Todo): Promise<Todo> {
-    return this.todosService.create(todo)
+    return await this.todosService.create(todo)
   }
 
   @Get()
   async getAll(): Promise<Todo[]> {
-    return this.todosService.getAll()
+    return await this.todosService.getAll()
   }
 
   @Get(':id')
   async getById(@Param('id') id: string): Promise<Todo> {
-    return this.todosService.getById(id)
+    return await this.todosService.getById(id)
   }
 
   @Patch(':id')
@@ -35,11 +35,11 @@ export class TodosController {
     @Param('id') id: string,
     @Body() newParams: Partial<Todo>,
   ): Promise<Todo> {
-    return this.todosService.update(id, newParams)
+    return await this.todosService.update(id, newParams)
   }
 
   @Delete(':id')
-  async delete(@Param('id') id: string): Promise<Todo> {
-    return this.todosService.delete(id)
+  async delete(@Param('id') id: string): Promise<void> {
+    return await this.todosService.delete(id)
   }
 }

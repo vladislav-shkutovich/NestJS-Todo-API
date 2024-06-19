@@ -15,7 +15,7 @@ export class TodosDatabaseService {
   async create(todo: Todo): Promise<Todo> {
     try {
       const createdTodo = new this.todoModel(todo)
-      return createdTodo.save()
+      return await createdTodo.save()
     } catch (error) {
       throw new InternalServerErrorException(`Failed to create todo. ${error}`)
     }
@@ -23,7 +23,7 @@ export class TodosDatabaseService {
 
   async getAll(): Promise<Todo[]> {
     try {
-      return this.todoModel.find().exec()
+      return await this.todoModel.find().exec()
     } catch (error) {
       throw new InternalServerErrorException(`Failed to get todos. ${error}`)
     }
@@ -55,13 +55,12 @@ export class TodosDatabaseService {
     }
   }
 
-  async delete(id: string): Promise<Todo> {
+  async delete(id: string): Promise<void> {
     try {
       const deletedTodo = await this.todoModel.findByIdAndDelete(id).exec()
       if (!deletedTodo) {
         throw new NotFoundException(`Todo with id ${id} not found`)
       }
-      return deletedTodo
     } catch (error) {
       throw new InternalServerErrorException(`Failed to delete todo. ${error}`)
     }
