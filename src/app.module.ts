@@ -11,7 +11,7 @@ import { TodosModule } from './todos/todos.module'
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
-        uri: configService.get<string>('MONGOOSE_MODULE_DATABASE_URL'),
+        uri: configService.get<string>('MONGODB_URI'),
       }),
       inject: [ConfigService],
     }),
