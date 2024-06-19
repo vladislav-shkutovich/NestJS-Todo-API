@@ -1,12 +1,18 @@
-import { Schema, Document } from 'mongoose'
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
+import { HydratedDocument, SchemaTypes } from 'mongoose'
 
-export const TodoSchema = new Schema({
-  title: { type: String, required: true },
-  description: String,
-})
+export type TodoDocument = HydratedDocument<Todo>
 
-export interface Todo extends Document {
+@Schema()
+export class Todo {
+  @Prop({ type: SchemaTypes.ObjectId })
   _id: string
+
+  @Prop({ required: true })
   title: string
-  description?: string
+
+  @Prop()
+  description: string
 }
+
+export const TodoSchema = SchemaFactory.createForClass(Todo)
