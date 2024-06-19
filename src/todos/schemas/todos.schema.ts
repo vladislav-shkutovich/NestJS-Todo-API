@@ -6,6 +6,7 @@ export const TodoSchema = new Schema({
 })
 
 export interface Todo extends Document {
+  _id: string
   title: string
   description?: string
 }
