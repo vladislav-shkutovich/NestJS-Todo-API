@@ -14,31 +14,26 @@ import { NotFoundError, ValidationError } from '../errors/errors'
 export class ErrorsInterceptor implements NestInterceptor {
   intercept(_: ExecutionContext, next: CallHandler): Observable<any> {
     return next.handle().pipe(
-      catchError((error) => {
-        switch (true) {
-          case error instanceof NotFoundError:
-            return throwError(
-              () => new HttpException(error.message, HttpStatus.NOT_FOUND),
-            )
+      catchError((error) =>
+        throwError(() => {
+          if (error instanceof NotFoundError) {
+            return new HttpException(error.message, HttpStatus.NOT_FOUND)
+          }
 
-          case error instanceof ValidationError:
-            return throwError(
-              () => new HttpException(error.message, HttpStatus.BAD_REQUEST),
-            )
+          if (error instanceof ValidationError) {
+            return new HttpException(error.message, HttpStatus.BAD_REQUEST)
+          }
 
-          case error instanceof HttpException:
-            return throwError(() => error)
+          if (error instanceof HttpException) {
+            return error
+          }
 
-          default:
-            return throwError(
-              () =>
-                new HttpException(
-                  'Internal server error',
-                  HttpStatus.INTERNAL_SERVER_ERROR,
-                ),
-            )
-        }
-      }),
+          return new HttpException(
+            'Internal server error',
+            HttpStatus.INTERNAL_SERVER_ERROR,
+          )
+        }),
+      ),
     )
   }
 }
