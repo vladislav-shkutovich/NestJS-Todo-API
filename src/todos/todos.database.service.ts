@@ -1,86 +1,51 @@
-import {
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-  OnModuleInit,
-  OnModuleDestroy,
-} from '@nestjs/common'
-import { resolve } from 'path'
-import { readFile, writeFile } from 'node:fs/promises'
-
-import type { TodoItem, Todos } from 'types/todos'
+import { Injectable } from '@nestjs/common'
+import { InjectModel } from '@nestjs/mongoose'
+import { Model } from 'mongoose'
+import { NotFoundError } from 'src/common/errors/errors'
+import { TODO_MODEL } from 'src/common/constants/database.constants'
+import type { Todo } from './schemas/todos.schema'
 
 @Injectable()
-export class TodosDatabaseService implements OnModuleInit, OnModuleDestroy {
-  private static todos: Todos = new Map()
+export class TodosDatabaseService {
+  constructor(@InjectModel(TODO_MODEL) private todoModel: Model<Todo>) {}
 
-  private readonly todosFilePath: string = resolve(
-    __dirname,
-    '../../../todos.json',
-  )
-
-  async onModuleInit() {
-    await this.loadTodosFromFile()
+  async create(todo: Todo): Promise<Todo> {
+    const createdTodo = await new this.todoModel(todo).save()
+    return createdTodo.toObject()
   }
 
-  async onModuleDestroy() {
-    await this.saveTodosToFile()
+  async getAll(): Promise<Todo[]> {
+    const allTodos = await this.todoModel.find()
+    return allTodos.map((todo) => todo.toObject())
   }
 
-  private async loadTodosFromFile() {
-    try {
-      const todosFile = await readFile(this.todosFilePath, 'utf8')
-      const todos = JSON.parse(todosFile)
-      for (const id in todos) {
-        if (todos.hasOwnProperty(id)) {
-          TodosDatabaseService.todos.set(id, todos[id])
-        }
-      }
-    } catch (error) {
-      throw new InternalServerErrorException(`Files loading failed. ${error}.`)
+  async getById(id: string): Promise<Todo> {
+    const todoById = await this.todoModel.findById(id)
+
+    if (!todoById) {
+      throw new NotFoundError(`Todo with id ${id} not found`)
     }
+
+    return todoById.toObject()
   }
 
-  private async saveTodosToFile() {
-    try {
-      const todosToJson = JSON.stringify(
-        Object.fromEntries(TodosDatabaseService.todos),
-      )
-      await writeFile(this.todosFilePath, todosToJson, 'utf8')
-    } catch (error) {
-      throw new InternalServerErrorException(`Files saving failed. ${error}.`)
+  async update(id: string, newParams: Partial<Todo>): Promise<Todo> {
+    const updatedTodo = await this.todoModel.findByIdAndUpdate(id, newParams, {
+      new: true,
+    })
+
+    if (!updatedTodo) {
+      throw new NotFoundError(`Todo with id ${id} not found`)
     }
+
+    return updatedTodo.toObject()
   }
 
-  create(todoItem: TodoItem): TodoItem {
-    TodosDatabaseService.todos.set(todoItem.id, todoItem)
-    return todoItem
-  }
+  async delete(id: string): Promise<void> {
+    const deletedTodo = await this.todoModel.findByIdAndDelete(id)
 
-  getAll(): TodoItem[] {
-    return Array.from(TodosDatabaseService.todos.values())
-  }
-
-  getById(id: string): TodoItem {
-    const todoItem = TodosDatabaseService.todos.get(id)
-    if (!todoItem) {
-      throw new NotFoundException(`TodoItem with id ${id} not found`)
+    if (!deletedTodo) {
+      throw new NotFoundError(`Todo with id ${id} not found`)
     }
-    return todoItem
-  }
-
-  update(id: string, newParams: Partial<TodoItem>): TodoItem {
-    const todoItem = this.getById(id)
-
-    const updatedTodo = { ...todoItem, ...newParams }
-    TodosDatabaseService.todos.set(id, updatedTodo)
-
-    return updatedTodo
-  }
-
-  delete(id: string): TodoItem {
-    const todoItem = this.getById(id)
-    TodosDatabaseService.todos.delete(id)
-    return todoItem
   }
 }
