@@ -15,7 +15,8 @@ export class TodosDatabaseService {
   }
 
   async getAll(): Promise<Todo[]> {
-    return await this.todoModel.find()
+    const allTodos = await this.todoModel.find()
+    return allTodos.map((todo) => todo.toObject())
   }
 
   async getById(id: string): Promise<Todo> {
