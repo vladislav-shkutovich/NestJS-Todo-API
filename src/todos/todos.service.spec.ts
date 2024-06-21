@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing'
 import { TodosService } from './todos.service'
 import { TodosDatabaseService } from './todos.database.service'
 import type { Todo } from './schemas/todos.schema'
+import { createMock } from '@golevelup/ts-jest'
 
 describe('TodosService', () => {
   let todosService: TodosService
@@ -13,13 +14,7 @@ describe('TodosService', () => {
         TodosService,
         {
           provide: TodosDatabaseService,
-          useValue: {
-            create: jest.fn(),
-            getAll: jest.fn(),
-            getById: jest.fn(),
-            update: jest.fn(),
-            delete: jest.fn(),
-          },
+          useValue: createMock<TodosDatabaseService>(),
         },
       ],
     }).compile()
