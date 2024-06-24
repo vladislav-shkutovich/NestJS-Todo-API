@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing'
-import { createMock } from '@golevelup/ts-jest'
+import { DeepMocked, createMock } from '@golevelup/ts-jest'
 import { Types } from 'mongoose'
 import { TodosService } from './todos.service'
 import { TodosDatabaseService } from './todos.database.service'
@@ -9,7 +9,7 @@ import { Todo } from './schemas/todos.schema'
 
 describe('TodosService', () => {
   let todosService: TodosService
-  let todosDatabaseService: TodosDatabaseService
+  let todosDatabaseService: DeepMocked<TodosDatabaseService>
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -24,7 +24,7 @@ describe('TodosService', () => {
 
     todosService = module.get<TodosService>(TodosService)
     todosDatabaseService =
-      module.get<TodosDatabaseService>(TodosDatabaseService)
+      module.get<DeepMocked<TodosDatabaseService>>(TodosDatabaseService)
   })
 
   afterEach(() => {
@@ -47,7 +47,7 @@ describe('TodosService', () => {
         _id: new Types.ObjectId(),
         ...enteredTodo,
       }
-      jest.spyOn(todosDatabaseService, 'create').mockResolvedValue(createdTodo)
+      todosDatabaseService.create.mockResolvedValue(createdTodo)
       const result = await todosService.create(enteredTodo)
       expect(result).toEqual(createdTodo)
     })
@@ -67,7 +67,7 @@ describe('TodosService', () => {
           description: 'Test description',
         },
       ]
-      jest.spyOn(todosDatabaseService, 'getAll').mockResolvedValue(todoList)
+      todosDatabaseService.getAll.mockResolvedValue(todoList)
       const result = await todosService.getAll()
       expect(result).toEqual(todoList)
     })
@@ -87,7 +87,7 @@ describe('TodosService', () => {
         title: 'Test title',
         description: 'Test description',
       }
-      jest.spyOn(todosDatabaseService, 'getById').mockResolvedValue(todo)
+      todosDatabaseService.getById.mockResolvedValue(todo)
       const result = await todosService.getById(id)
       expect(result).toEqual(todo)
     })
@@ -110,7 +110,7 @@ describe('TodosService', () => {
         title: 'Test title',
         description: updateParams.description,
       }
-      jest.spyOn(todosDatabaseService, 'update').mockResolvedValue(updatedTodo)
+      todosDatabaseService.update.mockResolvedValue(updatedTodo)
       const result = await todosService.update(id, updateParams)
       expect(result).toEqual(updatedTodo)
     })
