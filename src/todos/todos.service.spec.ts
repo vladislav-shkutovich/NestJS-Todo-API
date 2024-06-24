@@ -37,7 +37,7 @@ describe('TodosService', () => {
       description: 'Test description',
     }
 
-    it('should call create method with correct arguments', async () => {
+    it('should call method with correct arguments', async () => {
       await todosService.create(enteredTodo)
       expect(todosDatabaseService.create).toHaveBeenCalledWith(enteredTodo)
     })
@@ -54,7 +54,7 @@ describe('TodosService', () => {
   })
 
   describe('getAll()', () => {
-    it('should call getAll method with correct arguments', async () => {
+    it('should call method with correct arguments', async () => {
       await todosService.getAll()
       expect(todosDatabaseService.getAll).toHaveBeenCalled()
     })
@@ -76,7 +76,7 @@ describe('TodosService', () => {
   describe('getById()', () => {
     const id = new Types.ObjectId().toString()
 
-    it('should call getById method with correct arguments', async () => {
+    it('should call method with correct arguments', async () => {
       await todosService.getById(id)
       expect(todosDatabaseService.getById).toHaveBeenCalledWith(id)
     })
@@ -99,7 +99,7 @@ describe('TodosService', () => {
       description: 'test updated description',
     }
 
-    it('should call update method with correct arguments', async () => {
+    it('should call method with correct arguments', async () => {
       await todosService.update(id, updateParams)
       expect(todosDatabaseService.update).toHaveBeenCalledWith(id, updateParams)
     })
@@ -116,9 +116,11 @@ describe('TodosService', () => {
     })
   })
 
-  it('should call delete method with correct argument', async () => {
-    const id = new Types.ObjectId().toString()
-    await todosService.delete(id)
-    expect(todosDatabaseService.delete).toHaveBeenCalledWith(id)
+  describe('delete()', () => {
+    it('should call method with correct argument', async () => {
+      const id = new Types.ObjectId().toString()
+      await todosService.delete(id)
+      expect(todosDatabaseService.delete).toHaveBeenCalledWith(id)
+    })
   })
 })
