@@ -19,11 +19,11 @@ import { IdParamDto } from './dto/id-param.dto'
 import type { Todo } from './schemas/todos.schema'
 
 @Controller(TODOS_ROUTE)
+@UsePipes(ValidationPipe)
 export class TodosController {
   constructor(private readonly todosService: TodosService) {}
 
   @Post()
-  @UsePipes(ValidationPipe)
   async create(@Body() createTodoDto: CreateTodoDto): Promise<Todo> {
     return await this.todosService.create(createTodoDto)
   }
@@ -34,13 +34,11 @@ export class TodosController {
   }
 
   @Get(':id')
-  @UsePipes(ValidationPipe)
   async getById(@Param() params: IdParamDto): Promise<Todo> {
     return await this.todosService.getById(params.id)
   }
 
   @Patch(':id')
-  @UsePipes(ValidationPipe)
   async update(
     @Param() params: IdParamDto,
     @Body() updateTodoDto: UpdateTodoDto,
@@ -50,7 +48,6 @@ export class TodosController {
 
   @Delete(':id')
   @HttpCode(204)
-  @UsePipes(ValidationPipe)
   async delete(@Param() params: IdParamDto): Promise<void> {
     await this.todosService.delete(params.id)
   }
