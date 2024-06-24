@@ -29,7 +29,7 @@ describe('TodosDatabaseService', () => {
   })
 
   afterEach(() => {
-    jest.clearAllMocks()
+    jest.resetAllMocks()
   })
 
   describe('update()', () => {

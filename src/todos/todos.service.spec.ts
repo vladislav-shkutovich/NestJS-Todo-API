@@ -28,7 +28,7 @@ describe('TodosService', () => {
   })
 
   afterEach(() => {
-    jest.clearAllMocks()
+    jest.resetAllMocks()
   })
 
   describe('create()', () => {
