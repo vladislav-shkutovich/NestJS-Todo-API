@@ -27,83 +27,98 @@ describe('TodosService', () => {
       module.get<TodosDatabaseService>(TodosDatabaseService)
   })
 
-  it('should call create method with correct arguments and return correct value', async () => {
+  afterEach(() => {
+    jest.clearAllMocks()
+  })
+
+  describe('create()', () => {
     const enteredTodo: CreateTodoDto = {
       title: 'Test title',
       description: 'Test description',
     }
-    const createdTodo: Todo = {
-      _id: new Types.ObjectId(),
-      ...enteredTodo,
-    }
 
-    jest.spyOn(todosDatabaseService, 'create').mockResolvedValue(createdTodo)
+    it('should call create method with correct arguments', async () => {
+      await todosService.create(enteredTodo)
+      expect(todosDatabaseService.create).toHaveBeenCalledWith(enteredTodo)
+    })
 
-    const result = await todosService.create(enteredTodo)
-
-    expect(todosDatabaseService.create).toHaveBeenCalledWith(enteredTodo)
-    expect(result).toEqual(createdTodo)
+    it('should return correct value', async () => {
+      const createdTodo: Todo = {
+        _id: new Types.ObjectId(),
+        ...enteredTodo,
+      }
+      jest.spyOn(todosDatabaseService, 'create').mockResolvedValue(createdTodo)
+      const result = await todosService.create(enteredTodo)
+      expect(result).toEqual(createdTodo)
+    })
   })
 
-  it('should call getAll method with correct arguments and return correct value', async () => {
-    const todoList: Todo[] = [
-      {
-        _id: new Types.ObjectId(),
+  describe('getAll()', () => {
+    it('should call getAll method with correct arguments', async () => {
+      await todosService.getAll()
+      expect(todosDatabaseService.getAll).toHaveBeenCalled()
+    })
+
+    it('should return correct value', async () => {
+      const todoList: Todo[] = [
+        {
+          _id: new Types.ObjectId(),
+          title: 'Test title',
+          description: 'Test description',
+        },
+      ]
+      jest.spyOn(todosDatabaseService, 'getAll').mockResolvedValue(todoList)
+      const result = await todosService.getAll()
+      expect(result).toEqual(todoList)
+    })
+  })
+
+  describe('getById()', () => {
+    const id = new Types.ObjectId().toString()
+
+    it('should call getById method with correct arguments', async () => {
+      await todosService.getById(id)
+      expect(todosDatabaseService.getById).toHaveBeenCalledWith(id)
+    })
+
+    it('should return correct value', async () => {
+      const todo: Todo = {
+        _id: new Types.ObjectId(id),
         title: 'Test title',
         description: 'Test description',
-      },
-    ]
-
-    jest.spyOn(todosDatabaseService, 'getAll').mockResolvedValue(todoList)
-
-    const result = await todosService.getAll()
-
-    expect(todosDatabaseService.getAll).toHaveBeenCalled()
-    expect(result).toEqual(todoList)
+      }
+      jest.spyOn(todosDatabaseService, 'getById').mockResolvedValue(todo)
+      const result = await todosService.getById(id)
+      expect(result).toEqual(todo)
+    })
   })
 
-  it('should call getById method with correct arguments and return correct value', async () => {
-    const id = new Types.ObjectId()
-    const todo: Todo = {
-      _id: id,
-      title: 'Test title',
-      description: 'Test description',
-    }
-
-    jest.spyOn(todosDatabaseService, 'getById').mockResolvedValue(todo)
-
-    const result = await todosService.getById(id.toString())
-
-    expect(todosDatabaseService.getById).toHaveBeenCalledWith(id.toString())
-    expect(result).toEqual(todo)
-  })
-
-  it('should call update method with correct arguments and return correct value', async () => {
-    const id = new Types.ObjectId()
+  describe('update()', () => {
+    const id = new Types.ObjectId().toString()
     const updateParams: UpdateTodoDto = {
       description: 'test updated description',
     }
-    const updatedTodo: Todo = {
-      _id: id,
-      title: 'Test title',
-      description: updateParams.description,
-    }
 
-    jest.spyOn(todosDatabaseService, 'update').mockResolvedValue(updatedTodo)
+    it('should call update method with correct arguments', async () => {
+      await todosService.update(id, updateParams)
+      expect(todosDatabaseService.update).toHaveBeenCalledWith(id, updateParams)
+    })
 
-    const result = await todosService.update(id.toString(), updateParams)
-
-    expect(todosDatabaseService.update).toHaveBeenCalledWith(
-      id.toString(),
-      updateParams,
-    )
-    expect(result).toEqual(updatedTodo)
+    it('should return correct value', async () => {
+      const updatedTodo: Todo = {
+        _id: new Types.ObjectId(id),
+        title: 'Test title',
+        description: updateParams.description,
+      }
+      jest.spyOn(todosDatabaseService, 'update').mockResolvedValue(updatedTodo)
+      const result = await todosService.update(id, updateParams)
+      expect(result).toEqual(updatedTodo)
+    })
   })
 
   it('should call delete method with correct argument', async () => {
     const id = new Types.ObjectId().toString()
     await todosService.delete(id)
-
     expect(todosDatabaseService.delete).toHaveBeenCalledWith(id)
   })
 })
