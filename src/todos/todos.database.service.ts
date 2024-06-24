@@ -12,7 +12,7 @@ export class TodosDatabaseService {
   constructor(@InjectModel(TODO_MODEL) private todoModel: Model<Todo>) {}
 
   async create(createTodoDto: CreateTodoDto): Promise<Todo> {
-    const createdTodo = await new this.todoModel(createTodoDto).save()
+    const createdTodo = await this.todoModel.create(createTodoDto)
     return createdTodo.toObject()
   }
 
