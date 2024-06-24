@@ -27,7 +27,7 @@ describe('TodosService', () => {
       module.get<TodosDatabaseService>(TodosDatabaseService)
   })
 
-  it('should call create method with correct arguments', async () => {
+  it('should call create method with correct arguments and return correct value', async () => {
     const enteredTodo: CreateTodoDto = {
       title: 'Test title',
       description: 'Test description',
@@ -45,7 +45,7 @@ describe('TodosService', () => {
     expect(result).toEqual(createdTodo)
   })
 
-  it('should call getAll method with correct arguments', async () => {
+  it('should call getAll method with correct arguments and return correct value', async () => {
     const todoList: Todo[] = [
       {
         _id: new Types.ObjectId(),
@@ -62,7 +62,7 @@ describe('TodosService', () => {
     expect(result).toEqual(todoList)
   })
 
-  it('should call getById method with correct arguments', async () => {
+  it('should call getById method with correct arguments and return correct value', async () => {
     const id = new Types.ObjectId()
     const todo: Todo = {
       _id: id,
@@ -78,7 +78,7 @@ describe('TodosService', () => {
     expect(result).toEqual(todo)
   })
 
-  it('should call update method with correct arguments', async () => {
+  it('should call update method with correct arguments and return correct value', async () => {
     const id = new Types.ObjectId()
     const updateParams: UpdateTodoDto = {
       description: 'test updated description',
