@@ -4,13 +4,15 @@ import { Model } from 'mongoose'
 import { NotFoundError } from 'src/common/errors/errors'
 import { TODO_MODEL } from 'src/common/constants/database.constants'
 import type { Todo } from './schemas/todos.schema'
+import { CreateTodoDto } from './dto/create-todo.dto'
+import { UpdateTodoDto } from './dto/update-todo.dto'
 
 @Injectable()
 export class TodosDatabaseService {
   constructor(@InjectModel(TODO_MODEL) private todoModel: Model<Todo>) {}
 
-  async create(todo: Todo): Promise<Todo> {
-    const createdTodo = await new this.todoModel(todo).save()
+  async create(createTodoDto: CreateTodoDto): Promise<Todo> {
+    const createdTodo = await this.todoModel.create(createTodoDto)
     return createdTodo.toObject()
   }
 
@@ -29,10 +31,14 @@ export class TodosDatabaseService {
     return todoById.toObject()
   }
 
-  async update(id: string, newParams: Partial<Todo>): Promise<Todo> {
-    const updatedTodo = await this.todoModel.findByIdAndUpdate(id, newParams, {
-      new: true,
-    })
+  async update(id: string, updateTodoDto: UpdateTodoDto): Promise<Todo> {
+    const updatedTodo = await this.todoModel.findByIdAndUpdate(
+      id,
+      updateTodoDto,
+      {
+        new: true,
+      },
+    )
 
     if (!updatedTodo) {
       throw new NotFoundError(`Todo with id ${id} not found`)
