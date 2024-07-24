@@ -1,0 +1,29 @@
+# Using a build argument to specify the Node.js version
+ARG NODE_VERSION=20.13.1
+
+# Using the specified version in the FROM statement directly
+FROM node:${NODE_VERSION}
+
+# Set the working directory in the container
+WORKDIR /app
+
+# Copy package management files
+COPY package.json yarn.lock ./
+
+# Install all dependencies and the Nest CLI globally
+RUN yarn install && yarn global add @nestjs/cli
+
+# Copy everything else
+COPY . .
+
+# Set the development environment
+ENV NODE_ENV=development
+
+# Set the MongoDB URI from an environment variable passed during runtime
+ENV MONGODB_URI=${MONGODB_URI}
+
+# Expose the port the app runs on
+EXPOSE 3000
+
+# Command to start the development server
+CMD ["yarn", "start:dev"]
