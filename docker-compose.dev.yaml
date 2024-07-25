@@ -4,15 +4,26 @@ services:
   app:
     build:
       context: .
-      dockerfile: Dockerfile.dev
-      args:
-        NODE_VERSION: ${NODE_VERSION:-20.13.1}
+      dockerfile: Dockerfile
+      target: development
     volumes:
       - .:/app
-      - /app/node_modules
+      - ./node_modules:/app/node_modules
     environment:
       NODE_ENV: development
-      MONGODB_URI: ${MONGODB_URI}
+      MONGODB_URI: mongodb://mongodb:27017
     ports:
       - '3000:3000'
+      - '9229:9229'
+    restart: always
     container_name: nestjs-todo-api-dev
+
+  mongodb:
+    image: mongo:7
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongodb-data:/data/db
+
+volumes:
+  mongodb-data:

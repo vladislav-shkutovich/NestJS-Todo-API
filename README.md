@@ -38,6 +38,9 @@ $ yarn install
 # development
 $ yarn run start
 
+# development using Docker + local MongoDB
+$ docker-compose -f docker-compose.dev.yaml up --build
+
 # watch mode
 $ yarn run start:dev
 

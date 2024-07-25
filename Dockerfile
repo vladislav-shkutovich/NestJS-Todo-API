@@ -1,40 +1,22 @@
-# Node version variable for easy updates
-ARG NODE_VERSION=20.13.1
-
-# Build stage for the application
-FROM node:${NODE_VERSION} AS builder
-
-# Setting the working directory in the container
+FROM node:20.13.1-alpine AS base
 WORKDIR /app
-
-# Copying dependency management files
 COPY package.json yarn.lock ./
 
-# Installing dependencies with the exact versions from lockfile
-RUN yarn install --frozen-lockfile && yarn global add @nestjs/cli
+FROM base AS development
+RUN yarn install --frozen-lockfile
+CMD ["yarn", "start:dev"]
 
-# Copying the source code of the project
+FROM base AS builder
+RUN yarn install --frozen-lockfile
 COPY . .
-
-# Running the build script
 RUN yarn build
 
-# Final stage based on the lighter Node Alpine image
-FROM node:${NODE_VERSION}-alpine
+FROM base AS prod-deps
+RUN yarn install --frozen-lockfile --production
 
-# Setting the work directory
-WORKDIR /app
-
-# Copying the built code and dependencies from the previous stage
+FROM base AS production
+COPY --from=prod-deps /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./package.json
-
-# Exposing the port used by the application
 EXPOSE 3000
-
-# Environment variable for MongoDB connection
-ENV MONGODB_URI=${MONGODB_URI}
-
-# Command to run the application
-CMD ["yarn", "start:prod"]
+USER node
+CMD ["node", "dist/main"]
