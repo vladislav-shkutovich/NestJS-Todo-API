@@ -5,7 +5,7 @@ import { jest } from '@jest/globals'
 import * as bcrypt from 'bcrypt'
 
 import { AuthService } from './auth.service'
-import { UserService } from 'src/user/user.service'
+import { type User, UserService } from 'src/user/user.service'
 
 jest.mock('bcrypt')
 
@@ -40,7 +40,7 @@ describe('AuthService', () => {
 
   describe('validateUser()', () => {
     it('should return the user data without password if validation is successful', async () => {
-      const mockUser = {
+      const mockUser: User = {
         userId: 1,
         username: 'test',
         password: await bcrypt.hash('test', 10),
@@ -57,7 +57,7 @@ describe('AuthService', () => {
     })
 
     it('should return null if validation is not successful', async () => {
-      const mockUser = {
+      const mockUser: User = {
         userId: 1,
         username: 'test',
         password: await bcrypt.hash('test', 10),
@@ -79,7 +79,11 @@ describe('AuthService', () => {
 
   describe('login()', () => {
     it('should return an access token', async () => {
-      const mockUser = { userId: 1, username: 'test' }
+      const mockUser: User = {
+        userId: 1,
+        username: 'test',
+        password: await bcrypt.hash('test', 10),
+      }
       const mockToken = 'mockToken'
 
       jwtService.sign.mockReturnValue(mockToken)
