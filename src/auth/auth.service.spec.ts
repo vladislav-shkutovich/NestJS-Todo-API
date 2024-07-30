@@ -2,12 +2,14 @@ import { Test, TestingModule } from '@nestjs/testing'
 import { JwtService } from '@nestjs/jwt'
 import { DeepMocked, createMock } from '@golevelup/ts-jest'
 import { jest } from '@jest/globals'
-import * as bcrypt from 'bcrypt'
 
 import { AuthService } from './auth.service'
+import { compare } from 'src/common/utils/crypto.utils'
 import { type User, UserService } from 'src/user/user.service'
 
-jest.mock('bcrypt')
+jest.mock('src/common/utils/crypto.utils', () => ({
+  compare: jest.fn(),
+}))
 
 describe('AuthService', () => {
   let authService: AuthService
@@ -43,28 +45,29 @@ describe('AuthService', () => {
       const mockUser: User = {
         userId: 1,
         username: 'test',
-        password: await bcrypt.hash('test', 10),
+        password: 'hashed',
       }
 
       userService.findUserByUsername.mockResolvedValue(mockUser)
-      ;(bcrypt.compare as jest.Mock).mockImplementation(async () => true)
+      ;(compare as jest.Mock).mockImplementation(() => true)
 
       const result = await authService.validateUser(mockUser.username, 'test')
       expect(result).toEqual({ userId: 1, username: 'test' })
       expect(userService.findUserByUsername).toHaveBeenCalledWith(
         mockUser.username,
       )
+      expect(compare).toHaveBeenCalledWith('test', mockUser.password)
     })
 
     it('should return null if validation is not successful', async () => {
       const mockUser: User = {
         userId: 1,
         username: 'test',
-        password: await bcrypt.hash('test', 10),
+        password: 'hashed',
       }
 
       userService.findUserByUsername.mockResolvedValue(mockUser)
-      ;(bcrypt.compare as jest.Mock).mockImplementation(async () => false)
+      ;(compare as jest.Mock).mockImplementation(() => false)
 
       const result = await authService.validateUser(
         mockUser.username,
@@ -74,6 +77,7 @@ describe('AuthService', () => {
       expect(userService.findUserByUsername).toHaveBeenCalledWith(
         mockUser.username,
       )
+      expect(compare).toHaveBeenCalledWith('wrongpassword', mockUser.password)
     })
   })
 
@@ -82,7 +86,7 @@ describe('AuthService', () => {
       const mockUser: User = {
         userId: 1,
         username: 'test',
-        password: await bcrypt.hash('test', 10),
+        password: 'hashed',
       }
       const mockToken = 'mockToken'
 
