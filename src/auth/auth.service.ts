@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
-import * as bcrypt from 'bcrypt'
 
+import { compare } from 'src/common/utils/crypto.utils'
 import { type User, UserService } from 'src/user/user.service'
 
 @Injectable()
@@ -16,7 +16,7 @@ export class AuthService {
     pass: string,
   ): Promise<Omit<User, 'password'> | null> {
     const user = await this.userService.findUserByUsername(username)
-    if (user && (await bcrypt.compare(pass, user.password))) {
+    if (user && (await compare(pass, user.password))) {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { password, ...paramsExceptPassword } = user
       return paramsExceptPassword

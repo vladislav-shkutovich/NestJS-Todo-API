@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common'
-import * as bcrypt from 'bcrypt'
+
+import { hash } from 'src/common/utils/crypto.utils'
 
 export interface User {
   userId: number
@@ -9,15 +10,15 @@ export interface User {
 
 @Injectable()
 export class UserService {
-  private users: User[] = [
-    {
-      userId: 1,
-      username: 'test',
-      password: bcrypt.hashSync('test', 15),
-    },
-  ]
-
   async findUserByUsername(username: string): Promise<User | undefined> {
-    return this.users.find((user) => user.username === username)
+    const users: User[] = [
+      {
+        userId: 1,
+        username: 'test',
+        password: await hash('test'),
+      },
+    ]
+
+    return users.find((user) => user.username === username)
   }
 }
