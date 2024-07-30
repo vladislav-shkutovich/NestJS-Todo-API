@@ -10,7 +10,6 @@ import { Observable, throwError } from 'rxjs'
 import { catchError } from 'rxjs/operators'
 import { NotFoundError } from '../errors/errors'
 
-// TODO: discuss it and make decision what to use: exception filters separately or this interceptor with custom error classes (a problem with auth error handling: console - ok, actual response - 500 only from `handlRequest` guard)
 @Injectable()
 export class ErrorsInterceptor implements NestInterceptor {
   intercept(_: ExecutionContext, next: CallHandler): Observable<any> {
