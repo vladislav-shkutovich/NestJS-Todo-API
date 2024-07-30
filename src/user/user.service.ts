@@ -13,7 +13,7 @@ export class UserService {
     {
       userId: 1,
       username: 'test',
-      password: bcrypt.hashSync('test', 10),
+      password: bcrypt.hashSync('test', 15),
     },
   ]
 
