@@ -12,10 +12,10 @@ import {
 } from '@nestjs/common'
 
 import { TODOS_ROUTE } from 'src/common/constants/routing.constants'
+import { IdParamDto } from 'src/common/dto/id-param.dto'
 import { TodosService } from './todos.service'
 import { CreateTodoDto } from './dto/create-todo.dto'
 import { UpdateTodoDto } from './dto/update-todo.dto'
-import { IdParamDto } from './dto/id-param.dto'
 import type { Todo } from './schemas/todos.schema'
 
 @Controller(TODOS_ROUTE)
