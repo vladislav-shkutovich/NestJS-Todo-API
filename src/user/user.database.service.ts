@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common'
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
 import { Model } from 'mongoose'
 
@@ -13,6 +17,17 @@ export class UserDatabaseService {
   constructor(@InjectModel(USER_MODEL) private userModel: Model<User>) {}
 
   async createUser(createUserDto: CreateUserDto): Promise<User> {
+    const userDuplicate = await this.userModel.findOne({
+      username: createUserDto.username,
+    })
+
+    // TODO: rework it into Guard usage
+    if (userDuplicate) {
+      throw new ConflictException(
+        `User with username ${createUserDto.username} already exist`,
+      )
+    }
+
     const hashedPassword = await hash(createUserDto.password)
     const createdUser = await this.userModel.create({
       ...createUserDto,
