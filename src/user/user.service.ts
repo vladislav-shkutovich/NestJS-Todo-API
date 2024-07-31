@@ -1,19 +1,31 @@
 import { Injectable } from '@nestjs/common'
-import { Types } from 'mongoose'
-import { hash } from 'src/common/utils/crypto.utils'
+
+import { UserDatabaseService } from './user.database.service'
+import { CreateUserDto } from './dto/create-user.dto'
+import { UpdateUserDto } from './dto/update-user.dto'
 import type { User } from './schemas/user.schema'
 
 @Injectable()
 export class UserService {
-  async findUserByUsername(username: string): Promise<User | undefined> {
-    const users: User[] = [
-      {
-        _id: new Types.ObjectId(),
-        username: 'test',
-        password: await hash('test'),
-      },
-    ]
+  constructor(private readonly userDatabaseService: UserDatabaseService) {}
 
-    return users.find((user) => user.username === username)
+  async createUser(createUserDto: CreateUserDto): Promise<User> {
+    return await this.userDatabaseService.createUser(createUserDto)
+  }
+
+  async findAllUsers(): Promise<User[]> {
+    return await this.userDatabaseService.findAllUsers()
+  }
+
+  async findUserByUsername(username: string): Promise<User> {
+    return await this.userDatabaseService.findUserByUsername(username)
+  }
+
+  async updateUser(id: string, updateUserDto: UpdateUserDto): Promise<User> {
+    return await this.userDatabaseService.updateUser(id, updateUserDto)
+  }
+
+  async deleteUser(id: string): Promise<void> {
+    return await this.userDatabaseService.deleteUser(id)
   }
 }
