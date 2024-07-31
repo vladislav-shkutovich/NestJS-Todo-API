@@ -1,19 +1,14 @@
 import { Injectable } from '@nestjs/common'
-
+import { Types } from 'mongoose'
 import { hash } from 'src/common/utils/crypto.utils'
-
-export interface User {
-  userId: number
-  username: string
-  password: string
-}
+import type { User } from './schemas/user.schema'
 
 @Injectable()
 export class UserService {
   async findUserByUsername(username: string): Promise<User | undefined> {
     const users: User[] = [
       {
-        userId: 1,
+        _id: new Types.ObjectId(),
         username: 'test',
         password: await hash('test'),
       },
