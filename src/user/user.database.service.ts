@@ -34,11 +34,14 @@ export class UserDatabaseService {
       password: hashedPassword,
     })
 
+    // TODO: return createdUser without password?
     return createdUser.toObject()
   }
 
   async findAllUsers(): Promise<User[]> {
     const allUsers = await this.userModel.find()
+
+    // TODO: return allUsers without passwords?
     return allUsers.map((user) => user.toObject())
   }
 
@@ -52,6 +55,7 @@ export class UserDatabaseService {
       throw new NotFoundException(`User with username ${username} not found`)
     }
 
+    // TODO: return user without password?
     return user.toObject()
   }
 
@@ -74,6 +78,7 @@ export class UserDatabaseService {
       throw new NotFoundException(`User with id ${id} not found`)
     }
 
+    // TODO: return updatedUser without password?
     return updatedUser.toObject()
   }
 
