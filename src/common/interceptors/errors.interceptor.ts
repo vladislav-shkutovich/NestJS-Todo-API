@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common'
 import { Observable, throwError } from 'rxjs'
 import { catchError } from 'rxjs/operators'
-import { NotFoundError } from '../errors/errors'
+import { BadRequestError, ConflictError, NotFoundError } from '../errors/errors'
 
 @Injectable()
 export class ErrorsInterceptor implements NestInterceptor {
@@ -18,6 +18,14 @@ export class ErrorsInterceptor implements NestInterceptor {
         throwError(() => {
           if (error instanceof NotFoundError) {
             return new HttpException(error.message, HttpStatus.NOT_FOUND)
+          }
+
+          if (error instanceof ConflictError) {
+            return new HttpException(error.message, HttpStatus.CONFLICT)
+          }
+
+          if (error instanceof BadRequestError) {
+            return new HttpException(error.message, HttpStatus.BAD_REQUEST)
           }
 
           if (error instanceof HttpException) {

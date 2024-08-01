@@ -1,13 +1,10 @@
-import {
-  ConflictException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common'
+import { Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
 import { Model } from 'mongoose'
 
-import { hash } from 'src/common/utils/crypto.utils'
-import { USER_MODEL } from 'src/common/constants/database.constants'
+import { USER_MODEL } from '../common/constants/database.constants'
+import { ConflictError, NotFoundError } from '../common/errors/errors'
+import { hash } from '../common/utils/crypto.utils'
 import { CreateUserDto } from './dto/create-user.dto'
 import { UpdateUserDto } from './dto/update-user.dto'
 import type { User } from './schemas/user.schema'
@@ -23,7 +20,7 @@ export class UserDatabaseService {
 
     // TODO: rework it into Guard usage
     if (userDuplicate) {
-      throw new ConflictException(
+      throw new ConflictError(
         `User with username ${createUserDto.username} already exist`,
       )
     }
@@ -49,10 +46,7 @@ export class UserDatabaseService {
     const user = await this.userModel.findOne({ username })
 
     if (!user) {
-      // TODO: this method used in validate fn at Guards level, which invoked before any interceptors
-      // TODO: discuss if it acceptable to use only exception filters instead of custom errors
-      // TODO: here and in all other places (by NotFoundException search)
-      throw new NotFoundException(`User with username ${username} not found`)
+      throw new NotFoundError(`User with username ${username} not found`)
     }
 
     // TODO: return user without password?
@@ -75,7 +69,7 @@ export class UserDatabaseService {
     )
 
     if (!updatedUser) {
-      throw new NotFoundException(`User with id ${id} not found`)
+      throw new NotFoundError(`User with id ${id} not found`)
     }
 
     // TODO: return updatedUser without password?
@@ -86,7 +80,7 @@ export class UserDatabaseService {
     const deletedUser = await this.userModel.findByIdAndDelete(id)
 
     if (!deletedUser) {
-      throw new NotFoundException(`User with id ${id} not found`)
+      throw new NotFoundError(`User with id ${id} not found`)
     }
   }
 }
