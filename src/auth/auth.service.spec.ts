@@ -44,6 +44,7 @@ describe('AuthService', () => {
 
   describe('validateUser()', () => {
     it('should return the user data without password if validation is successful', async () => {
+      const mockCompare = compare as jest.Mock
       const mockUser: User = {
         _id: new Types.ObjectId(),
         username: 'test',
@@ -52,13 +53,11 @@ describe('AuthService', () => {
       const enteredPassword = 'test'
 
       userService.findUserByUsername.mockResolvedValue(mockUser)
-      ;(compare as jest.Mock).mockImplementation(() => true)
+      mockCompare.mockImplementation(() => true)
 
-      const result = await authService.validateUser(
-        mockUser.username,
-        enteredPassword,
-      )
-      expect(result).toEqual({ _id: mockUser._id, username: mockUser.username })
+      await expect(
+        authService.getValidatedUser(mockUser.username, enteredPassword),
+      ).resolves.toEqual({ _id: mockUser._id, username: mockUser.username })
       expect(userService.findUserByUsername).toHaveBeenCalledWith(
         mockUser.username,
       )
@@ -66,6 +65,7 @@ describe('AuthService', () => {
     })
 
     it('should return null if validation is not successful', async () => {
+      const mockCompare = compare as jest.Mock
       const mockUser: User = {
         _id: new Types.ObjectId(),
         username: 'test',
@@ -74,13 +74,11 @@ describe('AuthService', () => {
       const enteredPassword = 'wrongpassword'
 
       userService.findUserByUsername.mockResolvedValue(mockUser)
-      ;(compare as jest.Mock).mockImplementation(() => false)
+      mockCompare.mockImplementation(() => false)
 
-      const result = await authService.validateUser(
-        mockUser.username,
-        enteredPassword,
-      )
-      expect(result).toBeNull()
+      await expect(
+        authService.getValidatedUser(mockUser.username, enteredPassword),
+      ).rejects.toThrow()
       expect(userService.findUserByUsername).toHaveBeenCalledWith(
         mockUser.username,
       )
@@ -99,8 +97,9 @@ describe('AuthService', () => {
 
       jwtService.sign.mockReturnValue(mockToken)
 
-      const result = await authService.login(mockUser)
-      expect(result).toEqual({ access_token: mockToken })
+      await expect(authService.getAccessToken(mockUser)).resolves.toEqual(
+        mockToken,
+      )
       expect(jwtService.sign).toHaveBeenCalledWith({
         username: mockUser.username,
         sub: mockUser._id,
