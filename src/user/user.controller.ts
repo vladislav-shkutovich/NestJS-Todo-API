@@ -11,12 +11,12 @@ import {
   ValidationPipe,
 } from '@nestjs/common'
 
-import { UserService } from './user.service'
-import { USERS_ROUTE } from 'src/common/constants/routing.constants'
+import { USERS_ROUTE } from '../common/constants/routing.constants'
+import { Public } from '../common/decorators/public.decorator'
+import { IdParamDto } from '../common/dto/id-param.dto'
 import { CreateUserDto } from './dto/create-user.dto'
 import { UpdateUserDto } from './dto/update-user.dto'
-import { IdParamDto } from 'src/common/dto/id-param.dto'
-import { Public } from 'src/common/decorators/public.decorator'
+import { UserService } from './user.service'
 import type { User } from './schemas/user.schema'
 
 @Controller(USERS_ROUTE)

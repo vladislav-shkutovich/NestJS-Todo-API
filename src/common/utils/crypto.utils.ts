@@ -1,4 +1,4 @@
-import { scrypt, randomBytes, timingSafeEqual } from 'crypto'
+import { randomBytes, scrypt, timingSafeEqual } from 'crypto'
 
 const keyLength = 64
 

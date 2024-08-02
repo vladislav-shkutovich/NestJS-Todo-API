@@ -1,13 +1,14 @@
 import {
   CallHandler,
   ExecutionContext,
-  Injectable,
-  NestInterceptor,
   HttpException,
   HttpStatus,
+  Injectable,
+  NestInterceptor,
 } from '@nestjs/common'
 import { Observable, throwError } from 'rxjs'
 import { catchError } from 'rxjs/operators'
+
 import { BadRequestError, ConflictError, NotFoundError } from '../errors/errors'
 
 @Injectable()

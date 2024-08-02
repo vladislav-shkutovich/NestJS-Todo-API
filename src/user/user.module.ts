@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common'
 import { MongooseModule } from '@nestjs/mongoose'
 
-import { USER_MODEL } from 'src/common/constants/database.constants'
-import { UserController } from './user.controller'
-import { UserService } from './user.service'
-import { UserDatabaseService } from './user.database.service'
+import { USER_MODEL } from '../common/constants/database.constants'
 import { UserSchema } from './schemas/user.schema'
+import { UserController } from './user.controller'
+import { UserDatabaseService } from './user.database.service'
+import { UserService } from './user.service'
 
 @Module({
   imports: [

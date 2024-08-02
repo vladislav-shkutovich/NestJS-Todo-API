@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config'
 import { PassportStrategy } from '@nestjs/passport'
 import { ExtractJwt, Strategy } from 'passport-jwt'
 
-import { throwMissingEnvVar } from 'src/common/utils/env.utils'
+import { throwMissingEnvVar } from '../../common/utils/env.utils'
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {

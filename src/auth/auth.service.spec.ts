@@ -1,12 +1,12 @@
-import { Test, TestingModule } from '@nestjs/testing'
-import { JwtService } from '@nestjs/jwt'
 import { DeepMocked, createMock } from '@golevelup/ts-jest'
 import { jest } from '@jest/globals'
+import { JwtService } from '@nestjs/jwt'
+import { Test, TestingModule } from '@nestjs/testing'
 import { Types } from 'mongoose'
 
-import { AuthService } from './auth.service'
 import { compare } from 'src/common/utils/crypto.utils'
 import { UserService } from 'src/user/user.service'
+import { AuthService } from './auth.service'
 import type { User } from 'src/user/schemas/user.schema'
 
 jest.mock('src/common/utils/crypto.utils', () => ({
