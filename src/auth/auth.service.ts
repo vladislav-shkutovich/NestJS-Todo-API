@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 
-import { compare } from 'src/common/utils/crypto.utils'
-import { UserService } from 'src/user/user.service'
 import { BadRequestError, NotFoundError } from '../common/errors/errors'
-import type { User } from 'src/user/schemas/user.schema'
+import { compare } from '../common/utils/crypto.utils'
+import { UserService } from '../user/user.service'
+import type { User } from '../user/schemas/user.schema'
 
 @Injectable()
 export class AuthService {
@@ -17,9 +17,11 @@ export class AuthService {
     username: string,
     pass: string,
   ): Promise<Omit<User, 'password'>> {
+    // TODO: add `username` and `pass` fields validation using class-validator
+
     const user = await this.userService.findUserByUsername(username)
 
-    // TODO: discuss if I should duplicate errors throwing here (the same handled in findUserByUsername)
+    // TODO: discuss if errors throwing should be duplicated here (the same handled in `findUserByUsername`)
     if (!user) {
       throw new NotFoundError(`User with username ${username} not found`)
     }

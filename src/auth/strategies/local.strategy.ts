@@ -1,15 +1,15 @@
 import {
   BadRequestException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
-  UnauthorizedException,
 } from '@nestjs/common'
 import { PassportStrategy } from '@nestjs/passport'
 import { Strategy } from 'passport-local'
 
-import { AuthService } from '../auth.service'
-import type { User } from 'src/user/schemas/user.schema'
 import { BadRequestError, NotFoundError } from '../../common/errors/errors'
+import { AuthService } from '../auth.service'
+import type { User } from '../../user/schemas/user.schema'
 
 @Injectable()
 export class LocalStrategy extends PassportStrategy(Strategy) {
@@ -32,7 +32,8 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
         throw new BadRequestException(error.message)
       }
 
-      throw new UnauthorizedException()
+      // TODO: UnauthorizedException replaced to InternalServerErrorException here, is it right?
+      throw new InternalServerErrorException(error.message)
     }
   }
 }
