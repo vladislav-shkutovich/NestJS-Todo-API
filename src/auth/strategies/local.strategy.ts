@@ -32,7 +32,6 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
         throw new BadRequestException(error.message)
       }
 
-      // TODO: UnauthorizedException replaced to InternalServerErrorException here, is it right?
       throw new InternalServerErrorException(error.message)
     }
   }
