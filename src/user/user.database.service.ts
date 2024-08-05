@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose'
 import { Model } from 'mongoose'
 
 import { USER_MODEL } from '../common/constants/database.constants'
-import { ConflictError, NotFoundError } from '../common/errors/errors'
+import { NotFoundError } from '../common/errors/errors'
 import { CreateUserDto } from './dto/create-user.dto'
 import { UpdateUserDto } from './dto/update-user.dto'
 import type { User } from './schemas/user.schema'
@@ -12,18 +12,12 @@ import type { User } from './schemas/user.schema'
 export class UserDatabaseService {
   constructor(@InjectModel(USER_MODEL) private userModel: Model<User>) {}
 
+  async getIsUserExist(username: string): Promise<boolean> {
+    const user = await this.userModel.findOne({ username })
+    return !!user
+  }
+
   async createUser(createUserDto: CreateUserDto): Promise<User> {
-    const userDuplicate = await this.userModel.findOne({
-      username: createUserDto.username,
-    })
-
-    // TODO: rework it into Guard usage
-    if (userDuplicate) {
-      throw new ConflictError(
-        `User with username ${createUserDto.username} already exist`,
-      )
-    }
-
     const createdUser = await this.userModel.create(createUserDto)
 
     return createdUser.toObject()
