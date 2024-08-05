@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common'
 
+import { hash } from '../common/utils/crypto.utils'
 import { CreateUserDto } from './dto/create-user.dto'
 import { UpdateUserDto } from './dto/update-user.dto'
 import { UserDatabaseService } from './user.database.service'
@@ -12,7 +13,12 @@ export class UserService {
   constructor(private readonly userDatabaseService: UserDatabaseService) {}
 
   async createUser(createUserDto: CreateUserDto): Promise<User> {
-    return await this.userDatabaseService.createUser(createUserDto)
+    const hashedPassword = await hash(createUserDto.password)
+
+    return await this.userDatabaseService.createUser({
+      ...createUserDto,
+      password: hashedPassword,
+    })
   }
 
   async findAllUsers(): Promise<User[]> {
@@ -24,7 +30,13 @@ export class UserService {
   }
 
   async updateUser(id: string, updateUserDto: UpdateUserDto): Promise<User> {
-    return await this.userDatabaseService.updateUser(id, updateUserDto)
+    const updateParams = { ...updateUserDto }
+
+    if (updateUserDto.password) {
+      updateParams.password = await hash(updateUserDto.password)
+    }
+
+    return await this.userDatabaseService.updateUser(id, updateParams)
   }
 
   async deleteUser(id: string): Promise<void> {

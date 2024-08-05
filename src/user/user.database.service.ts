@@ -4,7 +4,6 @@ import { Model } from 'mongoose'
 
 import { USER_MODEL } from '../common/constants/database.constants'
 import { ConflictError, NotFoundError } from '../common/errors/errors'
-import { hash } from '../common/utils/crypto.utils'
 import { CreateUserDto } from './dto/create-user.dto'
 import { UpdateUserDto } from './dto/update-user.dto'
 import type { User } from './schemas/user.schema'
@@ -25,11 +24,7 @@ export class UserDatabaseService {
       )
     }
 
-    const hashedPassword = await hash(createUserDto.password)
-    const createdUser = await this.userModel.create({
-      ...createUserDto,
-      password: hashedPassword,
-    })
+    const createdUser = await this.userModel.create(createUserDto)
 
     return createdUser.toObject()
   }
@@ -51,15 +46,9 @@ export class UserDatabaseService {
   }
 
   async updateUser(id: string, updateUserDto: UpdateUserDto): Promise<User> {
-    const updateParams = { ...updateUserDto }
-
-    if (updateUserDto.password) {
-      updateParams.password = await hash(updateUserDto.password)
-    }
-
     const updatedUser = await this.userModel.findByIdAndUpdate(
       id,
-      updateParams,
+      updateUserDto,
       {
         new: true,
       },
