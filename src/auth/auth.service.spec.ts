@@ -42,7 +42,7 @@ describe('AuthService', () => {
     jest.resetAllMocks()
   })
 
-  describe('validateUser()', () => {
+  describe('getValidatedUser()', () => {
     it('should return the user data without password if validation is successful', async () => {
       const mockCompare = compare as jest.Mock
       const mockUser: User = {
