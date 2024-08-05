@@ -1,15 +1,18 @@
 import {
+  BadRequestException,
   CallHandler,
+  ConflictException,
   ExecutionContext,
   HttpException,
-  HttpStatus,
   Injectable,
+  InternalServerErrorException,
   NestInterceptor,
+  NotFoundException,
 } from '@nestjs/common'
 import { Observable, throwError } from 'rxjs'
 import { catchError } from 'rxjs/operators'
 
-import { BadRequestError, ConflictError, NotFoundError } from '../errors/errors'
+import { ValidationError, ConflictError, NotFoundError } from '../errors/errors'
 
 @Injectable()
 export class ErrorsInterceptor implements NestInterceptor {
@@ -18,25 +21,22 @@ export class ErrorsInterceptor implements NestInterceptor {
       catchError((error) =>
         throwError(() => {
           if (error instanceof NotFoundError) {
-            return new HttpException(error.message, HttpStatus.NOT_FOUND)
+            return new NotFoundException(error.message)
           }
 
           if (error instanceof ConflictError) {
-            return new HttpException(error.message, HttpStatus.CONFLICT)
+            return new ConflictException(error.message)
           }
 
-          if (error instanceof BadRequestError) {
-            return new HttpException(error.message, HttpStatus.BAD_REQUEST)
+          if (error instanceof ValidationError) {
+            return new BadRequestException(error.message)
           }
 
           if (error instanceof HttpException) {
             return error
           }
 
-          return new HttpException(
-            'Internal server error',
-            HttpStatus.INTERNAL_SERVER_ERROR,
-          )
+          return new InternalServerErrorException(error.message)
         }),
       ),
     )

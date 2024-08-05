@@ -7,7 +7,7 @@ import {
 import { PassportStrategy } from '@nestjs/passport'
 import { Strategy } from 'passport-local'
 
-import { BadRequestError, NotFoundError } from '../../common/errors/errors'
+import { ValidationError, NotFoundError } from '../../common/errors/errors'
 import { AuthService } from '../auth.service'
 import type { User } from '../../user/schemas/user.schema'
 
@@ -28,7 +28,7 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
         throw new NotFoundException(error.message)
       }
 
-      if (error instanceof BadRequestError) {
+      if (error instanceof ValidationError) {
         throw new BadRequestException(error.message)
       }
 

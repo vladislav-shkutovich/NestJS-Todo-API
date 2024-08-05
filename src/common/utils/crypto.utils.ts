@@ -1,29 +1,21 @@
-import { randomBytes, scrypt, timingSafeEqual } from 'crypto'
+import { randomBytes, scrypt, timingSafeEqual } from 'node:crypto'
+import { promisify } from 'node:util'
 
 const keyLength = 64
+const scryptAsync = promisify(scrypt)
 
 export const hash = async (password: string): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const salt = randomBytes(16).toString('hex')
-
-    scrypt(password, salt, keyLength, (err, derivedKey) => {
-      if (err) reject(err)
-      resolve(`${salt}.${derivedKey.toString('hex')}`)
-    })
-  })
+  const salt = randomBytes(16).toString('hex')
+  const derivedKey = await scryptAsync(password, salt, keyLength)
+  return `${salt}.${(derivedKey as Buffer).toString('hex')}`
 }
 
 export const compare = async (
   password: string,
   hash: string,
 ): Promise<boolean> => {
-  return new Promise((resolve, reject) => {
-    const [salt, hashKey] = hash.split('.')
-    const hashKeyBuff = Buffer.from(hashKey, 'hex')
-
-    scrypt(password, salt, keyLength, (err, derivedKey) => {
-      if (err) reject(err)
-      resolve(timingSafeEqual(hashKeyBuff, derivedKey))
-    })
-  })
+  const [salt, hashKey] = hash.split('.')
+  const hashKeyBuff = Buffer.from(hashKey, 'hex')
+  const derivedKey = await scryptAsync(password, salt, keyLength)
+  return timingSafeEqual(hashKeyBuff, derivedKey as Buffer)
 }

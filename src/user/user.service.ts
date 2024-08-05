@@ -5,6 +5,8 @@ import { UpdateUserDto } from './dto/update-user.dto'
 import { UserDatabaseService } from './user.database.service'
 import type { User } from './schemas/user.schema'
 
+// TODO: return all user data without passwords?
+
 @Injectable()
 export class UserService {
   constructor(private readonly userDatabaseService: UserDatabaseService) {}

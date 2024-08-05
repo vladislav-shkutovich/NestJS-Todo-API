@@ -12,7 +12,7 @@ export class ConflictError extends Error {
   }
 }
 
-export class BadRequestError extends Error {
+export class ValidationError extends Error {
   constructor(...args: ConstructorParameters<typeof Error>) {
     super(...args)
     this.name = this.constructor.name

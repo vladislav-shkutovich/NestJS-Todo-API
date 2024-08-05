@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 
-import { BadRequestError, NotFoundError } from '../common/errors/errors'
+import { ValidationError, NotFoundError } from '../common/errors/errors'
 import { compare } from '../common/utils/crypto.utils'
 import { UserService } from '../user/user.service'
 import type { User } from '../user/schemas/user.schema'
@@ -29,11 +29,10 @@ export class AuthService {
     const isPasswordMatch = await compare(pass, user.password)
 
     if (!isPasswordMatch) {
-      throw new BadRequestError('Wrong password')
+      throw new ValidationError('Wrong password')
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password, ...paramsExceptPassword } = user
+    const { password: _password, ...paramsExceptPassword } = user
     return paramsExceptPassword
   }
 
