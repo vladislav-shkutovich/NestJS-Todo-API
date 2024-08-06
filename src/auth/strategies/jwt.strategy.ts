@@ -4,7 +4,7 @@ import { PassportStrategy } from '@nestjs/passport'
 import { ExtractJwt, Strategy } from 'passport-jwt'
 
 import { throwMissingEnvVar } from '../../common/utils/env.utils'
-import type { UserWithoutPassword } from '../../common/types/user-types'
+import type { UserWithoutPassword } from '../../common/types/user.types'
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {

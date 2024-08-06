@@ -13,7 +13,10 @@ export class UserDatabaseService {
   constructor(@InjectModel(USER_MODEL) private userModel: Model<User>) {}
 
   async isUserExist(username: string): Promise<boolean> {
-    const user = await this.userModel.findOne({ username })
+    const user = await this.userModel.findOne(
+      { username },
+      { _id: -1, username: 1 },
+    )
     return !!user
   }
 

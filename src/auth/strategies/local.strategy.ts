@@ -9,7 +9,7 @@ import { Strategy } from 'passport-local'
 
 import { ValidationError, NotFoundError } from '../../common/errors/errors'
 import { AuthService } from '../auth.service'
-import type { UserWithoutPassword } from '../../common/types/user-types'
+import type { UserWithoutPassword } from '../../common/types/user.types'
 
 @Injectable()
 export class LocalStrategy extends PassportStrategy(Strategy) {

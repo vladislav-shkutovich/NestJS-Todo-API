@@ -4,7 +4,7 @@ import { JwtService } from '@nestjs/jwt'
 import { ValidationError } from '../common/errors/errors'
 import { compare } from '../common/utils/crypto.utils'
 import { UserService } from '../user/user.service'
-import type { UserWithoutPassword } from '../common/types/user-types'
+import type { UserWithoutPassword } from '../common/types/user.types'
 
 @Injectable()
 export class AuthService {

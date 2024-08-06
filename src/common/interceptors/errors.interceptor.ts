@@ -16,7 +16,7 @@ import { ValidationError, ConflictError, NotFoundError } from '../errors/errors'
 
 @Injectable()
 export class ErrorsInterceptor implements NestInterceptor {
-  intercept(_: ExecutionContext, next: CallHandler): Observable<any> {
+  intercept(_context: ExecutionContext, next: CallHandler): Observable<any> {
     return next.handle().pipe(
       catchError((error) =>
         throwError(() => {
