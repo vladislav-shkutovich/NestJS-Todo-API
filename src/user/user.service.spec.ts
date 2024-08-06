@@ -61,26 +61,22 @@ describe('UserService', () => {
     const hashedPassword = 'hashed_password'
 
     it('should throw ConflictError if user already exists', async () => {
-      userDatabaseService.isUserExist.mockResolvedValue(true)
+      userService.isUserExist = jest.fn().mockResolvedValue(true)
 
       await expect(userService.createUser(enteredUser)).rejects.toThrow(
         ConflictError,
       )
-      expect(userDatabaseService.isUserExist).toHaveBeenCalledWith(
-        enteredUser.username,
-      )
+      expect(userService.isUserExist).toHaveBeenCalledWith(enteredUser.username)
       expect(userDatabaseService.createUser).not.toHaveBeenCalled()
       expect(mockHash).not.toHaveBeenCalled()
     })
 
     it('should call method with correct arguments if user does not exist', async () => {
-      userDatabaseService.isUserExist.mockResolvedValue(false)
+      userService.isUserExist = jest.fn().mockResolvedValue(false)
       mockHash.mockResolvedValue(hashedPassword)
       await userService.createUser(enteredUser)
 
-      expect(userDatabaseService.isUserExist).toHaveBeenCalledWith(
-        enteredUser.username,
-      )
+      expect(userService.isUserExist).toHaveBeenCalledWith(enteredUser.username)
       expect(mockHash).toHaveBeenCalledWith(enteredUser.password)
       expect(userDatabaseService.createUser).toHaveBeenCalledWith({
         ...enteredUser,
@@ -95,7 +91,7 @@ describe('UserService', () => {
         password: hashedPassword,
       }
 
-      userDatabaseService.isUserExist.mockResolvedValue(false)
+      userService.isUserExist = jest.fn().mockResolvedValue(false)
       mockHash.mockResolvedValue(hashedPassword)
       userDatabaseService.createUser.mockResolvedValue(createdUser)
 
