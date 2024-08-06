@@ -8,6 +8,7 @@ import { User } from './schemas/user.schema'
 import { UserDatabaseService } from './user.database.service'
 import { UserService } from './user.service'
 import type { UpdateUserDto } from './dto/update-user.dto'
+import { ConflictError } from '../common/errors/errors'
 
 jest.mock('src/common/utils/crypto.utils', () => ({
   hash: jest.fn(),
@@ -37,6 +38,20 @@ describe('UserService', () => {
     jest.resetAllMocks()
   })
 
+  describe('isUserExist()', () => {
+    const username = 'username'
+
+    it('should call method with correct arguments', async () => {
+      await userService.isUserExist(username)
+      expect(userDatabaseService.isUserExist).toHaveBeenCalledWith(username)
+    })
+
+    it('should return correct value', async () => {
+      userDatabaseService.isUserExist.mockResolvedValue(false)
+      await expect(userService.isUserExist(username)).resolves.toEqual(false)
+    })
+  })
+
   describe('createUser()', () => {
     const mockHash = hash as jest.Mock
     const enteredUser: CreateUserDto = {
@@ -45,10 +60,27 @@ describe('UserService', () => {
     }
     const hashedPassword = 'hashed_password'
 
-    it('should call method with correct arguments', async () => {
+    it('should throw ConflictError if user already exists', async () => {
+      userDatabaseService.isUserExist.mockResolvedValue(true)
+
+      await expect(userService.createUser(enteredUser)).rejects.toThrow(
+        ConflictError,
+      )
+      expect(userDatabaseService.isUserExist).toHaveBeenCalledWith(
+        enteredUser.username,
+      )
+      expect(userDatabaseService.createUser).not.toHaveBeenCalled()
+      expect(mockHash).not.toHaveBeenCalled()
+    })
+
+    it('should call method with correct arguments if user does not exist', async () => {
+      userDatabaseService.isUserExist.mockResolvedValue(false)
       mockHash.mockResolvedValue(hashedPassword)
       await userService.createUser(enteredUser)
 
+      expect(userDatabaseService.isUserExist).toHaveBeenCalledWith(
+        enteredUser.username,
+      )
       expect(mockHash).toHaveBeenCalledWith(enteredUser.password)
       expect(userDatabaseService.createUser).toHaveBeenCalledWith({
         ...enteredUser,
@@ -57,16 +89,18 @@ describe('UserService', () => {
     })
 
     it('should return correct value', async () => {
-      const createrUser: User = {
+      const createdUser: User = {
         _id: new Types.ObjectId(),
         ...enteredUser,
         password: hashedPassword,
       }
 
-      userDatabaseService.createUser.mockResolvedValue(createrUser)
+      userDatabaseService.isUserExist.mockResolvedValue(false)
+      mockHash.mockResolvedValue(hashedPassword)
+      userDatabaseService.createUser.mockResolvedValue(createdUser)
 
       await expect(userService.createUser(enteredUser)).resolves.toEqual(
-        createrUser,
+        createdUser,
       )
     })
   })
