@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common'
 
+import { ConflictError } from '../common/errors/errors'
 import { hash } from '../common/utils/crypto.utils'
 import { CreateUserDto } from './dto/create-user.dto'
 import { UpdateUserDto } from './dto/update-user.dto'
@@ -12,7 +13,19 @@ import type { User } from './schemas/user.schema'
 export class UserService {
   constructor(private readonly userDatabaseService: UserDatabaseService) {}
 
+  async isUserExist(username: string): Promise<boolean> {
+    return await this.userDatabaseService.isUserExist(username)
+  }
+
   async createUser(createUserDto: CreateUserDto): Promise<User> {
+    const isDuplicate = await this.isUserExist(createUserDto.username)
+
+    if (isDuplicate) {
+      throw new ConflictError(
+        `User with username ${createUserDto.username} already exists`,
+      )
+    }
+
     const hashedPassword = await hash(createUserDto.password)
 
     return await this.userDatabaseService.createUser({

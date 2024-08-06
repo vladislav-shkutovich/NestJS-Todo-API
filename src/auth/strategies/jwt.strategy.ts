@@ -4,6 +4,7 @@ import { PassportStrategy } from '@nestjs/passport'
 import { ExtractJwt, Strategy } from 'passport-jwt'
 
 import { throwMissingEnvVar } from '../../common/utils/env.utils'
+import type { User } from '../../user/schemas/user.schema'
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -17,7 +18,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     })
   }
 
-  async validate({ sub, username }) {
-    return { userId: sub, username: username }
+  async validate({ sub, username }): Promise<Omit<User, 'password'>> {
+    return { _id: sub, username: username }
   }
 }

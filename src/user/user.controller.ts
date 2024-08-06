@@ -16,7 +16,6 @@ import { Public } from '../common/decorators/public.decorator'
 import { IdParamDto } from '../common/dto/id-param.dto'
 import { CreateUserDto } from './dto/create-user.dto'
 import { UpdateUserDto } from './dto/update-user.dto'
-import { UsernameValidationPipe } from './pipes/username-validation.pipe'
 import { UserService } from './user.service'
 import type { User } from './schemas/user.schema'
 
@@ -27,7 +26,6 @@ export class UserController {
 
   @Public()
   @Post()
-  @UsePipes(UsernameValidationPipe)
   async createUser(@Body() createUserDto: CreateUserDto): Promise<User> {
     return await this.userService.createUser(createUserDto)
   }

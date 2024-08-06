@@ -12,7 +12,7 @@ import type { User } from './schemas/user.schema'
 export class UserDatabaseService {
   constructor(@InjectModel(USER_MODEL) private userModel: Model<User>) {}
 
-  async getIsUserExist(username: string): Promise<boolean> {
+  async isUserExist(username: string): Promise<boolean> {
     const user = await this.userModel.findOne({ username })
     return !!user
   }

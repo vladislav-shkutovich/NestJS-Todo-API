@@ -36,7 +36,7 @@ export class ErrorsInterceptor implements NestInterceptor {
             return error
           }
 
-          return new InternalServerErrorException(error.message)
+          return new InternalServerErrorException()
         }),
       ),
     )

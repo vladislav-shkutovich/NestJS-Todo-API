@@ -32,7 +32,7 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
         throw new BadRequestException(error.message)
       }
 
-      throw new InternalServerErrorException(error.message)
+      throw new InternalServerErrorException()
     }
   }
 }

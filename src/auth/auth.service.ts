@@ -29,7 +29,7 @@ export class AuthService {
     return paramsExceptPassword
   }
 
-  async getAccessToken(user: User) {
+  async getAccessToken(user: Omit<User, 'password'>) {
     const payload = { username: user.username, sub: user._id }
     return this.jwtService.sign(payload)
   }
