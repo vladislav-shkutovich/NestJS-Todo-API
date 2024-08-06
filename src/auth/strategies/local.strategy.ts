@@ -9,7 +9,7 @@ import { Strategy } from 'passport-local'
 
 import { ValidationError, NotFoundError } from '../../common/errors/errors'
 import { AuthService } from '../auth.service'
-import type { User } from '../../user/schemas/user.schema'
+import type { UserWithoutPassword } from '../../common/types/user-types'
 
 @Injectable()
 export class LocalStrategy extends PassportStrategy(Strategy) {
@@ -20,7 +20,7 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
   async validate(
     username: string,
     password: string,
-  ): Promise<Omit<User, 'password'>> {
+  ): Promise<UserWithoutPassword> {
     try {
       return await this.authService.getValidatedUser(username, password)
     } catch (error) {

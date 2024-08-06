@@ -4,7 +4,7 @@ import { JwtService } from '@nestjs/jwt'
 import { ValidationError } from '../common/errors/errors'
 import { compare } from '../common/utils/crypto.utils'
 import { UserService } from '../user/user.service'
-import type { User } from '../user/schemas/user.schema'
+import type { UserWithoutPassword } from '../common/types/user-types'
 
 @Injectable()
 export class AuthService {
@@ -16,7 +16,7 @@ export class AuthService {
   async getValidatedUser(
     username: string,
     pass: string,
-  ): Promise<Omit<User, 'password'>> {
+  ): Promise<UserWithoutPassword> {
     const user = await this.userService.findUserByUsername(username)
 
     const isPasswordMatch = await compare(pass, user.password)
@@ -29,7 +29,7 @@ export class AuthService {
     return paramsExceptPassword
   }
 
-  async getAccessToken(user: Omit<User, 'password'>) {
+  async getAccessToken(user: UserWithoutPassword) {
     const payload = { username: user.username, sub: user._id }
     return this.jwtService.sign(payload)
   }

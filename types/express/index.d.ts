@@ -1,7 +1,7 @@
-import { User } from '../../src/user/schemas/user.schema'
+import type { UserWithoutPassword } from '../../src/common/types/user-types'
 
-declare module 'express-serve-static-core' {
+declare module 'express' {
   interface Request {
-    user: Omit<User, 'password'>
+    user: UserWithoutPassword
   }
 }
