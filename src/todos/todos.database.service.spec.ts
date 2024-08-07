@@ -57,8 +57,9 @@ describe('TodosDatabaseService', () => {
 
     it('should return correct value', async () => {
       mockTodoModel.findByIdAndUpdate.mockReturnValue(updatedTodo)
-      const result = await todosDatabaseService.update(id, updateParams)
-      expect(result).toEqual(updatedTodo.toObject())
+      await expect(
+        todosDatabaseService.update(id, updateParams),
+      ).resolves.toEqual(updatedTodo.toObject())
     })
 
     it('should throw NotFoundError if todo not found', async () => {

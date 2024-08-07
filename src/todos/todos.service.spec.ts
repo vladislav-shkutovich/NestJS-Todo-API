@@ -48,8 +48,9 @@ describe('TodosService', () => {
         ...enteredTodo,
       }
       todosDatabaseService.create.mockResolvedValue(createdTodo)
-      const result = await todosService.create(enteredTodo)
-      expect(result).toEqual(createdTodo)
+      await expect(todosService.create(enteredTodo)).resolves.toEqual(
+        createdTodo,
+      )
     })
   })
 
@@ -68,8 +69,7 @@ describe('TodosService', () => {
         },
       ]
       todosDatabaseService.getAll.mockResolvedValue(todoList)
-      const result = await todosService.getAll()
-      expect(result).toEqual(todoList)
+      await expect(todosService.getAll()).resolves.toEqual(todoList)
     })
   })
 
@@ -88,8 +88,7 @@ describe('TodosService', () => {
         description: 'Test description',
       }
       todosDatabaseService.getById.mockResolvedValue(todo)
-      const result = await todosService.getById(id)
-      expect(result).toEqual(todo)
+      await expect(todosService.getById(id)).resolves.toEqual(todo)
     })
   })
 
@@ -111,8 +110,9 @@ describe('TodosService', () => {
         description: updateParams.description,
       }
       todosDatabaseService.update.mockResolvedValue(updatedTodo)
-      const result = await todosService.update(id, updateParams)
-      expect(result).toEqual(updatedTodo)
+      await expect(todosService.update(id, updateParams)).resolves.toEqual(
+        updatedTodo,
+      )
     })
   })
 
