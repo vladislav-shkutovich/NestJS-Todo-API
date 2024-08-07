@@ -2,17 +2,12 @@ import { DeepMocked, createMock } from '@golevelup/ts-jest'
 import { Test, TestingModule } from '@nestjs/testing'
 import { Types } from 'mongoose'
 
-import { hash } from '../common/utils/crypto.utils'
+import { ConflictError, ValidationError } from '../common/errors/errors'
 import { CreateUserDto } from './dto/create-user.dto'
 import { User } from './schemas/user.schema'
 import { UserDatabaseService } from './user.database.service'
 import { UserService } from './user.service'
 import type { UpdateUserDto } from './dto/update-user.dto'
-import { ConflictError } from '../common/errors/errors'
-
-jest.mock('src/common/utils/crypto.utils', () => ({
-  hash: jest.fn(),
-}))
 
 describe('UserService', () => {
   let userService: UserService
@@ -38,6 +33,51 @@ describe('UserService', () => {
     jest.resetAllMocks()
   })
 
+  describe('getUserByCredentials', () => {
+    const mockUser: User = {
+      _id: new Types.ObjectId(),
+      username: 'username',
+      password: 'hashed_password',
+    }
+
+    it('should throw ValidationError if wrong password provided', async () => {
+      const enteredPassword = 'wrongpassword'
+
+      userService.findUserByUsername = jest.fn().mockResolvedValue(mockUser)
+      userService['comparePasswords'] = jest.fn().mockResolvedValue(false)
+
+      await expect(
+        userService.getUserByCredentials(mockUser.username, enteredPassword),
+      ).rejects.toThrow(ValidationError)
+      expect(userService.findUserByUsername).toHaveBeenCalledWith(
+        mockUser.username,
+      )
+      expect(userService['comparePasswords']).toHaveBeenCalledWith(
+        enteredPassword,
+        mockUser.password,
+      )
+    })
+
+    it('should return user without password if validation is successful', async () => {
+      const enteredPassword = 'password'
+
+      userService.findUserByUsername = jest.fn().mockResolvedValue(mockUser)
+      userService['comparePasswords'] = jest.fn().mockResolvedValue(true)
+      await userService.getUserByCredentials(mockUser.username, enteredPassword)
+
+      await expect(
+        userService.getUserByCredentials(mockUser.username, enteredPassword),
+      ).resolves.toEqual({ _id: mockUser._id, username: mockUser.username })
+      expect(userService.findUserByUsername).toHaveBeenCalledWith(
+        mockUser.username,
+      )
+      expect(userService['comparePasswords']).toHaveBeenCalledWith(
+        enteredPassword,
+        mockUser.password,
+      )
+    })
+  })
+
   describe('isUserExist()', () => {
     const username = 'username'
 
@@ -53,7 +93,6 @@ describe('UserService', () => {
   })
 
   describe('createUser()', () => {
-    const mockHash = hash as jest.Mock
     const enteredUser: CreateUserDto = {
       username: 'username',
       password: 'password',
@@ -62,22 +101,25 @@ describe('UserService', () => {
 
     it('should throw ConflictError if user already exists', async () => {
       userService.isUserExist = jest.fn().mockResolvedValue(true)
+      userService['hashPassword'] = jest.fn()
 
       await expect(userService.createUser(enteredUser)).rejects.toThrow(
         ConflictError,
       )
       expect(userService.isUserExist).toHaveBeenCalledWith(enteredUser.username)
       expect(userDatabaseService.createUser).not.toHaveBeenCalled()
-      expect(mockHash).not.toHaveBeenCalled()
+      expect(userService['hashPassword']).not.toHaveBeenCalled()
     })
 
     it('should call method with correct arguments if user does not exist', async () => {
       userService.isUserExist = jest.fn().mockResolvedValue(false)
-      mockHash.mockResolvedValue(hashedPassword)
+      userService['hashPassword'] = jest.fn().mockResolvedValue(hashedPassword)
       await userService.createUser(enteredUser)
 
       expect(userService.isUserExist).toHaveBeenCalledWith(enteredUser.username)
-      expect(mockHash).toHaveBeenCalledWith(enteredUser.password)
+      expect(userService['hashPassword']).toHaveBeenCalledWith(
+        enteredUser.password,
+      )
       expect(userDatabaseService.createUser).toHaveBeenCalledWith({
         ...enteredUser,
         password: hashedPassword,
@@ -92,7 +134,7 @@ describe('UserService', () => {
       }
 
       userService.isUserExist = jest.fn().mockResolvedValue(false)
-      mockHash.mockResolvedValue(hashedPassword)
+      userService['hashPassword'] = jest.fn().mockResolvedValue(hashedPassword)
       userDatabaseService.createUser.mockResolvedValue(createdUser)
 
       await expect(userService.createUser(enteredUser)).resolves.toEqual(
@@ -133,20 +175,21 @@ describe('UserService', () => {
     })
 
     it('should return correct value', async () => {
-      const user: User = {
+      const mockUser: User = {
         _id: new Types.ObjectId(id),
         username: 'username',
         password: 'password',
       }
 
-      userDatabaseService.findUserByUsername.mockResolvedValue(user)
+      userDatabaseService.findUserByUsername.mockResolvedValue(mockUser)
 
-      await expect(userService.findUserByUsername(id)).resolves.toEqual(user)
+      await expect(userService.findUserByUsername(id)).resolves.toEqual(
+        mockUser,
+      )
     })
   })
 
   describe('update()', () => {
-    const mockHash = hash as jest.Mock
     const id = new Types.ObjectId().toString()
     const updateParams: UpdateUserDto = {
       password: 'updatedpassword',
@@ -154,10 +197,12 @@ describe('UserService', () => {
     const hashedPassword = 'hashed_password'
 
     it('should call method with correct arguments', async () => {
-      mockHash.mockResolvedValue(hashedPassword)
+      userService['hashPassword'] = jest.fn().mockResolvedValue(hashedPassword)
       await userService.updateUser(id, updateParams)
 
-      expect(mockHash).toHaveBeenCalledWith(updateParams.password)
+      expect(userService['hashPassword']).toHaveBeenCalledWith(
+        updateParams.password,
+      )
       expect(userDatabaseService.updateUser).toHaveBeenCalledWith(id, {
         ...updateParams,
         password: hashedPassword,
@@ -172,7 +217,7 @@ describe('UserService', () => {
       }
 
       userDatabaseService.updateUser.mockResolvedValue(updatedUser)
-      mockHash.mockResolvedValue(hashedPassword)
+      userService['hashPassword'] = jest.fn().mockResolvedValue(hashedPassword)
 
       await expect(userService.updateUser(id, updateParams)).resolves.toEqual(
         updatedUser,
