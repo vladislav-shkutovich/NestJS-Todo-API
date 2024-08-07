@@ -3,7 +3,6 @@ import { randomBytes, scrypt, timingSafeEqual } from 'node:crypto'
 import { promisify } from 'node:util'
 
 import { ConflictError, ValidationError } from '../common/errors/errors'
-import { UserWithoutPassword } from '../common/types/user.types'
 import { CreateUserDto } from './dto/create-user.dto'
 import { UpdateUserDto } from './dto/update-user.dto'
 import { UserDatabaseService } from './user.database.service'
@@ -35,7 +34,7 @@ export class UserService {
   async getUserByCredentials(
     username: string,
     password: string,
-  ): Promise<UserWithoutPassword> {
+  ): Promise<User> {
     const user = await this.findUserByUsername(username)
 
     const isPasswordMatch = await this.comparePasswords(password, user.password)
@@ -44,8 +43,7 @@ export class UserService {
       throw new ValidationError('Wrong password')
     }
 
-    const { password: _password, ...paramsExceptPassword } = user
-    return paramsExceptPassword
+    return user
   }
 
   async isUserExist(username: string): Promise<boolean> {

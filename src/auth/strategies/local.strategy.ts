@@ -22,7 +22,12 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
     password: string,
   ): Promise<UserWithoutPassword> {
     try {
-      return await this.userService.getUserByCredentials(username, password)
+      const user = await this.userService.getUserByCredentials(
+        username,
+        password,
+      )
+      const { password: _password, ...userWithoutPassword } = user
+      return userWithoutPassword
     } catch (error) {
       if (error instanceof NotFoundError) {
         throw new NotFoundException(error.message)

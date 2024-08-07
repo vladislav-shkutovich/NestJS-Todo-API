@@ -58,7 +58,7 @@ describe('UserService', () => {
       )
     })
 
-    it('should return user without password if validation is successful', async () => {
+    it('should return user if validation is successful', async () => {
       const enteredPassword = 'password'
 
       userService.findUserByUsername = jest.fn().mockResolvedValue(mockUser)
@@ -67,7 +67,7 @@ describe('UserService', () => {
 
       await expect(
         userService.getUserByCredentials(mockUser.username, enteredPassword),
-      ).resolves.toEqual({ _id: mockUser._id, username: mockUser.username })
+      ).resolves.toEqual(mockUser)
       expect(userService.findUserByUsername).toHaveBeenCalledWith(
         mockUser.username,
       )
