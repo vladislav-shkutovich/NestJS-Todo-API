@@ -18,7 +18,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     })
   }
 
-  async validate({ sub, username }): Promise<UserWithoutPassword> {
-    return { _id: sub, username: username }
+  // TODO: - Fix JwtStrategy's `validate` method and update related code (`getAccessToken`);
+  async validate(payload): Promise<UserWithoutPassword> {
+    return { ...payload, _id: payload.sub }
   }
 }

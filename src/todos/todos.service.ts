@@ -4,6 +4,7 @@ import type { Todo } from './schemas/todos.schema'
 import { CreateTodoDto } from './dto/create-todo.dto'
 import { UpdateTodoDto } from './dto/update-todo.dto'
 
+// TODO: - Adjust naming in TodosService methods and related code as it done in UserService;
 @Injectable()
 export class TodosService {
   constructor(private readonly todosDatabaseService: TodosDatabaseService) {}
@@ -14,6 +15,10 @@ export class TodosService {
 
   async getAll(): Promise<Todo[]> {
     return await this.todosDatabaseService.getAll()
+  }
+
+  async getAllByUserId(id: string): Promise<Todo[]> {
+    return await this.todosDatabaseService.getAllByUserId(id)
   }
 
   async getById(id: string): Promise<Todo> {

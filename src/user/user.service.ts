@@ -3,16 +3,21 @@ import { randomBytes, scrypt, timingSafeEqual } from 'node:crypto'
 import { promisify } from 'node:util'
 
 import { ConflictError, ValidationError } from '../common/errors/errors'
+import { TodosService } from '../todos/todos.service'
 import { CreateUserDto } from './dto/create-user.dto'
 import { UpdateUserDto } from './dto/update-user.dto'
 import { UserDatabaseService } from './user.database.service'
+import type { Todo } from '../todos/schemas/todos.schema'
 import type { User } from './schemas/user.schema'
 
 const scryptAsync = promisify(scrypt)
 
 @Injectable()
 export class UserService {
-  constructor(private readonly userDatabaseService: UserDatabaseService) {}
+  constructor(
+    private readonly userDatabaseService: UserDatabaseService,
+    private readonly todosService: TodosService,
+  ) {}
   private readonly keyLength = 64
 
   private async hashPassword(password: string): Promise<string> {
@@ -73,6 +78,14 @@ export class UserService {
 
   async findUserByUsername(username: string): Promise<User> {
     return await this.userDatabaseService.findUserByUsername(username)
+  }
+
+  async findUserTodos(id: string): Promise<Todo[]> {
+    // ? Question: can I skip this TodosService step and call TodosDatabaseService method directly?
+
+    // TODO: - Add `userId` validation (invalid id or user not found case);
+
+    return await this.todosService.getAllByUserId(id)
   }
 
   async updateUser(id: string, updateUserDto: UpdateUserDto): Promise<User> {

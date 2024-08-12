@@ -12,5 +12,6 @@ import { TODO_MODEL } from 'src/common/constants/database.constants'
   ],
   providers: [TodosService, TodosDatabaseService],
   controllers: [TodosController],
+  exports: [TodosService],
 })
 export class TodosModule {}
