@@ -42,12 +42,12 @@ export class UserDatabaseService {
     return userById.toObject()
   }
 
-  // TODO: - Replace `getUserByUsername` to `getUserByQuery` and update related code;
-  async getUserByUsername(username: string): Promise<User> {
-    const user = await this.userModel.findOne({ username })
+  async getUserByQuery(query: Record<string, any>): Promise<User> {
+    const user = await this.userModel.findOne(query)
 
     if (!user) {
-      throw new NotFoundError(`User with username ${username} not found`)
+      const queryKeys = Object.keys(query).join(', ')
+      throw new NotFoundError(`User not found by query: ${queryKeys}`)
     }
 
     return user.toObject()

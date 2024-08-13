@@ -40,7 +40,7 @@ export class UserService {
     username: string,
     password: string,
   ): Promise<User> {
-    const user = await this.userDatabaseService.getUserByUsername(username)
+    const user = await this.userDatabaseService.getUserByQuery({ username })
 
     const isPasswordMatch = await this.comparePasswords(password, user.password)
 
