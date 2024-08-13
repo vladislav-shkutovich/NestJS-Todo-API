@@ -11,7 +11,7 @@ import {
   ValidationPipe,
 } from '@nestjs/common'
 
-import { USERS_ROUTE } from '../common/constants/routing.constants'
+import { TODOS_ROUTE, USERS_ROUTE } from '../common/constants/routing.constants'
 import { Public } from '../common/decorators/public.decorator'
 import { IdParamDto } from '../common/dto/id-param.dto'
 import { CreateUserDto } from './dto/create-user.dto'
@@ -41,12 +41,14 @@ export class UserController {
     return await this.userService.getUserById(params.id)
   }
 
-  @Get(':id/todos')
-  async getUserTodos(@Param() params: any): Promise<Todo[]> {
+  @Get(`:id/${TODOS_ROUTE}`)
+  async getUserTodos(@Param() params: IdParamDto): Promise<Todo[]> {
     return await this.userService.getUserTodos(params.id)
   }
 
-  // TODO: - Allow to update only accepted user fileds (prevent updating user `todos` and `_id`);
+  // ! TODO: - Allow to update only accepted user fileds (prevent updating user `todos` and `_id` for this case);
+  // The same for updateTodos and globally for other possible update endpoints
+  // ? Question: How I can do it without manual checking and filtering of the updating fields in UserService?
   @Patch(':id')
   async updateUser(
     @Param() params: IdParamDto,

@@ -81,10 +81,9 @@ export class UserService {
   }
 
   async getUserTodos(userId: string): Promise<Todo[]> {
+    await this.getUserById(userId)
+
     // ? Question: can I skip this TodosService step and call TodosDatabaseService method directly?
-
-    // TODO: - Add `userId` validation (invalid userId or user not found case);
-
     return await this.todosService.getAllTodosByUserId(userId)
   }
 

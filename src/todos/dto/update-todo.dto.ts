@@ -12,5 +12,5 @@ export class UpdateTodoDto {
 
   @IsMongoId()
   @IsOptional()
-  userId: string
+  userId?: string
 }
