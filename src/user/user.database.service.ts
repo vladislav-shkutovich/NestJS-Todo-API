@@ -32,6 +32,17 @@ export class UserDatabaseService {
     return allUsers.map((user) => user.toObject())
   }
 
+  async getUserById(id: string): Promise<User> {
+    const userById = await this.userModel.findById(id)
+
+    if (!userById) {
+      throw new NotFoundError(`User with id ${id} not found`)
+    }
+
+    return userById.toObject()
+  }
+
+  // TODO: - Replace `getUserByUsername` to `getUserByQuery` and update related code;
   async getUserByUsername(username: string): Promise<User> {
     const user = await this.userModel.findOne({ username })
 

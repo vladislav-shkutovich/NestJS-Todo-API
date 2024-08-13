@@ -40,7 +40,7 @@ export class UserService {
     username: string,
     password: string,
   ): Promise<User> {
-    const user = await this.getUserByUsername(username)
+    const user = await this.userDatabaseService.getUserByUsername(username)
 
     const isPasswordMatch = await this.comparePasswords(password, user.password)
 
@@ -76,8 +76,8 @@ export class UserService {
     return await this.userDatabaseService.getAllUsers()
   }
 
-  async getUserByUsername(username: string): Promise<User> {
-    return await this.userDatabaseService.getUserByUsername(username)
+  async getUserById(id: string): Promise<User> {
+    return await this.userDatabaseService.getUserById(id)
   }
 
   async getUserTodos(userId: string): Promise<Todo[]> {

@@ -36,10 +36,9 @@ export class UserController {
     return await this.userService.getAllUsers()
   }
 
-  // TODO: - Fix "GET /users/:username" -> as "GET /users/:id" and update related code (`getUserByCredentials`);
-  @Get(':username')
-  async getUserByUsername(@Param() params: any): Promise<User> {
-    return await this.userService.getUserByUsername(params.username)
+  @Get(':id')
+  async getUserById(@Param() params: IdParamDto): Promise<User> {
+    return await this.userService.getUserById(params.id)
   }
 
   @Get(':id/todos')
@@ -47,6 +46,7 @@ export class UserController {
     return await this.userService.getUserTodos(params.id)
   }
 
+  // TODO: - Allow to update only accepted user fileds (prevent updating user `todos` and `_id`);
   @Patch(':id')
   async updateUser(
     @Param() params: IdParamDto,
