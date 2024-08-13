@@ -4,7 +4,10 @@ import { PassportStrategy } from '@nestjs/passport'
 import { ExtractJwt, Strategy } from 'passport-jwt'
 
 import { throwMissingEnvVar } from '../../common/utils/env.utils'
-import type { UserWithoutPassword } from '../../common/types/user.types'
+import type {
+  UserJwtPayload,
+  UserWithoutPassword,
+} from '../../common/types/user.types'
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -18,8 +21,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     })
   }
 
-  // TODO: - Fix JwtStrategy's `validate` method and update related code (`getAccessToken`);
-  async validate(payload): Promise<UserWithoutPassword> {
-    return { ...payload, _id: payload.sub }
+  validate(payload: UserJwtPayload): UserWithoutPassword {
+    delete payload.sub
+    return payload
   }
 }
