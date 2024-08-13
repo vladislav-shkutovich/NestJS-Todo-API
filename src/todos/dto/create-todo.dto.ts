@@ -1,4 +1,5 @@
 import { IsString, IsNotEmpty, IsOptional, IsMongoId } from 'class-validator'
+import { Types } from 'mongoose'
 
 export class CreateTodoDto {
   @IsString()
@@ -10,5 +11,5 @@ export class CreateTodoDto {
   description?: string
 
   @IsMongoId()
-  userId: string
+  userId: Types.ObjectId
 }
