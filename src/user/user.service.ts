@@ -83,7 +83,6 @@ export class UserService {
   async getUserTodos(userId: string): Promise<Todo[]> {
     await this.getUserById(userId)
 
-    // ? Question: can I skip this TodosService step and call TodosDatabaseService method directly?
     return await this.todosService.getAllTodosByUserId(userId)
   }
 

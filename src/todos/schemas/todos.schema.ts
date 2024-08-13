@@ -13,14 +13,11 @@ export class Todo {
   @Prop()
   description?: string
 
-  // ? Question: is it a correct way to attach refs to the models?
-  @Prop({ required: true, ref: 'User' })
+  @Prop({ required: true })
   userId: Types.ObjectId
 
-  @Prop()
   createdAt: Date
 
-  @Prop()
   updatedAt: Date
 }
 

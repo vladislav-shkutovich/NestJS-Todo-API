@@ -11,7 +11,7 @@ import {
   ValidationPipe,
 } from '@nestjs/common'
 
-import { TODOS_ROUTE, USERS_ROUTE } from '../common/constants/routing.constants'
+import { USERS_ROUTE } from '../common/constants/routing.constants'
 import { Public } from '../common/decorators/public.decorator'
 import { IdParamDto } from '../common/dto/id-param.dto'
 import { CreateUserDto } from './dto/create-user.dto'
@@ -41,7 +41,7 @@ export class UserController {
     return await this.userService.getUserById(params.id)
   }
 
-  @Get(`:id/${TODOS_ROUTE}`)
+  @Get(':id/todos')
   async getUserTodos(@Param() params: IdParamDto): Promise<Todo[]> {
     return await this.userService.getUserTodos(params.id)
   }
