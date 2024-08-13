@@ -26,13 +26,13 @@ export class UserDatabaseService {
     return createdUser.toObject()
   }
 
-  async findAllUsers(): Promise<User[]> {
+  async getAllUsers(): Promise<User[]> {
     const allUsers = await this.userModel.find()
 
     return allUsers.map((user) => user.toObject())
   }
 
-  async findUserByUsername(username: string): Promise<User> {
+  async getUserByUsername(username: string): Promise<User> {
     const user = await this.userModel.findOne({ username })
 
     if (!user) {

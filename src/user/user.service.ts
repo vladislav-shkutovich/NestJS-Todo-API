@@ -40,7 +40,7 @@ export class UserService {
     username: string,
     password: string,
   ): Promise<User> {
-    const user = await this.findUserByUsername(username)
+    const user = await this.getUserByUsername(username)
 
     const isPasswordMatch = await this.comparePasswords(password, user.password)
 
@@ -72,20 +72,20 @@ export class UserService {
     })
   }
 
-  async findAllUsers(): Promise<User[]> {
-    return await this.userDatabaseService.findAllUsers()
+  async getAllUsers(): Promise<User[]> {
+    return await this.userDatabaseService.getAllUsers()
   }
 
-  async findUserByUsername(username: string): Promise<User> {
-    return await this.userDatabaseService.findUserByUsername(username)
+  async getUserByUsername(username: string): Promise<User> {
+    return await this.userDatabaseService.getUserByUsername(username)
   }
 
-  async findUserTodos(id: string): Promise<Todo[]> {
+  async getUserTodos(userId: string): Promise<Todo[]> {
     // ? Question: can I skip this TodosService step and call TodosDatabaseService method directly?
 
-    // TODO: - Add `userId` validation (invalid id or user not found case);
+    // TODO: - Add `userId` validation (invalid userId or user not found case);
 
-    return await this.todosService.getAllByUserId(id)
+    return await this.todosService.getAllTodosByUserId(userId)
   }
 
   async updateUser(id: string, updateUserDto: UpdateUserDto): Promise<User> {

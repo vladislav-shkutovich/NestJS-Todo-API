@@ -32,19 +32,19 @@ export class UserController {
   }
 
   @Get()
-  async findAllUsers(): Promise<User[]> {
-    return await this.userService.findAllUsers()
+  async getAllUsers(): Promise<User[]> {
+    return await this.userService.getAllUsers()
   }
 
   // TODO: - Fix "GET /users/:username" -> as "GET /users/:id" and update related code (`getUserByCredentials`);
   @Get(':username')
-  async findUserByUsername(@Param() params: any): Promise<User> {
-    return await this.userService.findUserByUsername(params.username)
+  async getUserByUsername(@Param() params: any): Promise<User> {
+    return await this.userService.getUserByUsername(params.username)
   }
 
   @Get(':id/todos')
-  async findUserTodos(@Param() params: any): Promise<Todo[]> {
-    return await this.userService.findUserTodos(params.id)
+  async getUserTodos(@Param() params: any): Promise<Todo[]> {
+    return await this.userService.getUserTodos(params.id)
   }
 
   @Patch(':id')

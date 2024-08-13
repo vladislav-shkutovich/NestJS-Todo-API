@@ -43,13 +43,13 @@ describe('UserService', () => {
     it('should throw ValidationError if wrong password provided', async () => {
       const enteredPassword = 'wrongpassword'
 
-      userService.findUserByUsername = jest.fn().mockResolvedValue(mockUser)
+      userService.getUserByUsername = jest.fn().mockResolvedValue(mockUser)
       userService['comparePasswords'] = jest.fn().mockResolvedValue(false)
 
       await expect(
         userService.getUserByCredentials(mockUser.username, enteredPassword),
       ).rejects.toThrow(ValidationError)
-      expect(userService.findUserByUsername).toHaveBeenCalledWith(
+      expect(userService.getUserByUsername).toHaveBeenCalledWith(
         mockUser.username,
       )
       expect(userService['comparePasswords']).toHaveBeenCalledWith(
@@ -61,14 +61,14 @@ describe('UserService', () => {
     it('should return user if validation is successful', async () => {
       const enteredPassword = 'password'
 
-      userService.findUserByUsername = jest.fn().mockResolvedValue(mockUser)
+      userService.getUserByUsername = jest.fn().mockResolvedValue(mockUser)
       userService['comparePasswords'] = jest.fn().mockResolvedValue(true)
       await userService.getUserByCredentials(mockUser.username, enteredPassword)
 
       await expect(
         userService.getUserByCredentials(mockUser.username, enteredPassword),
       ).resolves.toEqual(mockUser)
-      expect(userService.findUserByUsername).toHaveBeenCalledWith(
+      expect(userService.getUserByUsername).toHaveBeenCalledWith(
         mockUser.username,
       )
       expect(userService['comparePasswords']).toHaveBeenCalledWith(
@@ -143,11 +143,11 @@ describe('UserService', () => {
     })
   })
 
-  describe('findAllUsers()', () => {
+  describe('getAllUsers()', () => {
     it('should call method with correct arguments', async () => {
-      await userService.findAllUsers()
+      await userService.getAllUsers()
 
-      expect(userDatabaseService.findAllUsers).toHaveBeenCalled()
+      expect(userDatabaseService.getAllUsers).toHaveBeenCalled()
     })
 
     it('should return correct value', async () => {
@@ -159,19 +159,19 @@ describe('UserService', () => {
         },
       ]
 
-      userDatabaseService.findAllUsers.mockResolvedValue(userList)
+      userDatabaseService.getAllUsers.mockResolvedValue(userList)
 
-      await expect(userService.findAllUsers()).resolves.toEqual(userList)
+      await expect(userService.getAllUsers()).resolves.toEqual(userList)
     })
   })
 
-  describe('findUserByUsername()', () => {
+  describe('getUserByUsername()', () => {
     const id = new Types.ObjectId().toString()
 
     it('should call method with correct arguments', async () => {
-      await userService.findUserByUsername(id)
+      await userService.getUserByUsername(id)
 
-      expect(userDatabaseService.findUserByUsername).toHaveBeenCalledWith(id)
+      expect(userDatabaseService.getUserByUsername).toHaveBeenCalledWith(id)
     })
 
     it('should return correct value', async () => {
@@ -181,15 +181,13 @@ describe('UserService', () => {
         password: 'password',
       }
 
-      userDatabaseService.findUserByUsername.mockResolvedValue(mockUser)
+      userDatabaseService.getUserByUsername.mockResolvedValue(mockUser)
 
-      await expect(userService.findUserByUsername(id)).resolves.toEqual(
-        mockUser,
-      )
+      await expect(userService.getUserByUsername(id)).resolves.toEqual(mockUser)
     })
   })
 
-  describe('update()', () => {
+  describe('updateUser()', () => {
     const id = new Types.ObjectId().toString()
     const updateParams: UpdateUserDto = {
       password: 'updatedpassword',
