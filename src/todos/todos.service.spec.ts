@@ -35,6 +35,7 @@ describe('TodosService', () => {
     const enteredTodo: CreateTodoDto = {
       title: 'Test title',
       description: 'Test description',
+      userId: new Types.ObjectId(),
     }
 
     it('should call method with correct arguments', async () => {
@@ -45,6 +46,8 @@ describe('TodosService', () => {
     it('should return correct value', async () => {
       const createdTodo: Todo = {
         _id: new Types.ObjectId(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
         ...enteredTodo,
       }
       todosDatabaseService.createTodo.mockResolvedValue(createdTodo)
@@ -66,6 +69,9 @@ describe('TodosService', () => {
           _id: new Types.ObjectId(),
           title: 'Test title',
           description: 'Test description',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          userId: new Types.ObjectId(),
         },
       ]
       todosDatabaseService.getAllTodos.mockResolvedValue(todoList)
@@ -86,6 +92,9 @@ describe('TodosService', () => {
         _id: new Types.ObjectId(id),
         title: 'Test title',
         description: 'Test description',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        userId: new Types.ObjectId(),
       }
       todosDatabaseService.getTodoById.mockResolvedValue(todo)
       await expect(todosService.getTodoById(id)).resolves.toEqual(todo)
@@ -111,6 +120,9 @@ describe('TodosService', () => {
         _id: new Types.ObjectId(id),
         title: 'Test title',
         description: updateParams.description,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        userId: new Types.ObjectId(),
       }
       todosDatabaseService.updateTodo.mockResolvedValue(updatedTodo)
       await expect(todosService.updateTodo(id, updateParams)).resolves.toEqual(

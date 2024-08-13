@@ -3,15 +3,18 @@ import { Test, TestingModule } from '@nestjs/testing'
 import { Types } from 'mongoose'
 
 import { ConflictError, ValidationError } from '../common/errors/errors'
+import { TodosService } from '../todos/todos.service'
 import { CreateUserDto } from './dto/create-user.dto'
 import { User } from './schemas/user.schema'
 import { UserDatabaseService } from './user.database.service'
 import { UserService } from './user.service'
+import type { Todo } from '../todos/schemas/todos.schema'
 import type { UpdateUserDto } from './dto/update-user.dto'
 
 describe('UserService', () => {
   let userService: UserService
   let userDatabaseService: DeepMocked<UserDatabaseService>
+  let todosService: DeepMocked<TodosService>
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -21,12 +24,17 @@ describe('UserService', () => {
           provide: UserDatabaseService,
           useValue: createMock<UserDatabaseService>(),
         },
+        {
+          provide: TodosService,
+          useValue: createMock<TodosService>(),
+        },
       ],
     }).compile()
 
     userService = module.get<UserService>(UserService)
     userDatabaseService =
       module.get<DeepMocked<UserDatabaseService>>(UserDatabaseService)
+    todosService = module.get<DeepMocked<TodosService>>(TodosService)
   })
 
   afterEach(() => {
@@ -38,20 +46,21 @@ describe('UserService', () => {
       _id: new Types.ObjectId(),
       username: 'username',
       password: 'hashed_password',
+      todos: [],
     }
 
     it('should throw ValidationError if wrong password provided', async () => {
       const enteredPassword = 'wrongpassword'
 
-      userService.getUserByUsername = jest.fn().mockResolvedValue(mockUser)
+      userDatabaseService.getUserByQuery = jest.fn().mockResolvedValue(mockUser)
       userService['comparePasswords'] = jest.fn().mockResolvedValue(false)
 
       await expect(
         userService.getUserByCredentials(mockUser.username, enteredPassword),
       ).rejects.toThrow(ValidationError)
-      expect(userService.getUserByUsername).toHaveBeenCalledWith(
-        mockUser.username,
-      )
+      expect(userDatabaseService.getUserByQuery).toHaveBeenCalledWith({
+        username: mockUser.username,
+      })
       expect(userService['comparePasswords']).toHaveBeenCalledWith(
         enteredPassword,
         mockUser.password,
@@ -61,16 +70,16 @@ describe('UserService', () => {
     it('should return user if validation is successful', async () => {
       const enteredPassword = 'password'
 
-      userService.getUserByUsername = jest.fn().mockResolvedValue(mockUser)
+      userDatabaseService.getUserByQuery = jest.fn().mockResolvedValue(mockUser)
       userService['comparePasswords'] = jest.fn().mockResolvedValue(true)
       await userService.getUserByCredentials(mockUser.username, enteredPassword)
 
       await expect(
         userService.getUserByCredentials(mockUser.username, enteredPassword),
       ).resolves.toEqual(mockUser)
-      expect(userService.getUserByUsername).toHaveBeenCalledWith(
-        mockUser.username,
-      )
+      expect(userDatabaseService.getUserByQuery).toHaveBeenCalledWith({
+        username: mockUser.username,
+      })
       expect(userService['comparePasswords']).toHaveBeenCalledWith(
         enteredPassword,
         mockUser.password,
@@ -131,6 +140,7 @@ describe('UserService', () => {
         _id: new Types.ObjectId(),
         ...enteredUser,
         password: hashedPassword,
+        todos: [],
       }
 
       userService.isUserExist = jest.fn().mockResolvedValue(false)
@@ -156,6 +166,7 @@ describe('UserService', () => {
           _id: new Types.ObjectId(),
           username: 'username',
           password: 'password',
+          todos: [],
         },
       ]
 
@@ -165,25 +176,29 @@ describe('UserService', () => {
     })
   })
 
-  describe('getUserByUsername()', () => {
-    const id = new Types.ObjectId().toString()
-
+  describe('getUserTodos()', () => {
+    const userId = new Types.ObjectId().toString()
     it('should call method with correct arguments', async () => {
-      await userService.getUserByUsername(id)
+      await userService.getUserTodos(userId)
 
-      expect(userDatabaseService.getUserByUsername).toHaveBeenCalledWith(id)
+      expect(todosService.getAllTodosByUserId).toHaveBeenCalledWith(userId)
     })
 
     it('should return correct value', async () => {
-      const mockUser: User = {
-        _id: new Types.ObjectId(id),
-        username: 'username',
-        password: 'password',
-      }
+      const todoList: Todo[] = [
+        {
+          _id: new Types.ObjectId(),
+          title: 'Test title',
+          description: 'Test description',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          userId: new Types.ObjectId(),
+        },
+      ]
 
-      userDatabaseService.getUserByUsername.mockResolvedValue(mockUser)
+      todosService.getAllTodosByUserId.mockResolvedValue(todoList)
 
-      await expect(userService.getUserByUsername(id)).resolves.toEqual(mockUser)
+      await expect(userService.getUserTodos(userId)).resolves.toEqual(todoList)
     })
   })
 
@@ -212,6 +227,7 @@ describe('UserService', () => {
         _id: new Types.ObjectId(id),
         username: 'Test title',
         password: hashedPassword,
+        todos: [],
       }
 
       userDatabaseService.updateUser.mockResolvedValue(updatedUser)
