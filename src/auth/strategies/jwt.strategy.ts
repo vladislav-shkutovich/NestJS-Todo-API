@@ -22,7 +22,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   validate(payload: UserJwtPayload): UserWithoutPassword {
-    delete payload.sub
-    return payload
+    const payloadClone = globalThis.structuredClone(payload)
+    delete payloadClone.sub
+    return payloadClone
   }
 }
