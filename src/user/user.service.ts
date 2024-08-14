@@ -2,17 +2,26 @@ import { Injectable } from '@nestjs/common'
 import { randomBytes, scrypt, timingSafeEqual } from 'node:crypto'
 import { promisify } from 'node:util'
 
-import { ConflictError, ValidationError } from '../common/errors/errors'
+import {
+  ConflictError,
+  NotFoundError,
+  ValidationError,
+} from '../common/errors/errors'
+import { TodosService } from '../todos/todos.service'
 import { CreateUserDto } from './dto/create-user.dto'
 import { UpdateUserDto } from './dto/update-user.dto'
 import { UserDatabaseService } from './user.database.service'
+import type { Todo } from '../todos/schemas/todos.schema'
 import type { User } from './schemas/user.schema'
 
 const scryptAsync = promisify(scrypt)
 
 @Injectable()
 export class UserService {
-  constructor(private readonly userDatabaseService: UserDatabaseService) {}
+  constructor(
+    private readonly userDatabaseService: UserDatabaseService,
+    private readonly todosService: TodosService,
+  ) {}
   private readonly keyLength = 64
 
   private async hashPassword(password: string): Promise<string> {
@@ -35,7 +44,7 @@ export class UserService {
     username: string,
     password: string,
   ): Promise<User> {
-    const user = await this.findUserByUsername(username)
+    const user = await this.userDatabaseService.getUserByQuery({ username })
 
     const isPasswordMatch = await this.comparePasswords(password, user.password)
 
@@ -46,12 +55,16 @@ export class UserService {
     return user
   }
 
-  async isUserExist(username: string): Promise<boolean> {
-    return await this.userDatabaseService.isUserExist(username)
+  async isUserExistByUsername(username: string): Promise<boolean> {
+    return await this.userDatabaseService.isUserExistByUsername(username)
+  }
+
+  async isUserExistById(id: string): Promise<boolean> {
+    return await this.userDatabaseService.isUserExistById(id)
   }
 
   async createUser(createUserDto: CreateUserDto): Promise<User> {
-    const isDuplicate = await this.isUserExist(createUserDto.username)
+    const isDuplicate = await this.isUserExistByUsername(createUserDto.username)
 
     if (isDuplicate) {
       throw new ConflictError(
@@ -67,12 +80,22 @@ export class UserService {
     })
   }
 
-  async findAllUsers(): Promise<User[]> {
-    return await this.userDatabaseService.findAllUsers()
+  async getAllUsers(): Promise<User[]> {
+    return await this.userDatabaseService.getAllUsers()
   }
 
-  async findUserByUsername(username: string): Promise<User> {
-    return await this.userDatabaseService.findUserByUsername(username)
+  async getUserById(id: string): Promise<User> {
+    return await this.userDatabaseService.getUserById(id)
+  }
+
+  async getUserTodos(userId: string): Promise<Todo[]> {
+    const isUserExist = await this.isUserExistById(userId)
+
+    if (!isUserExist) {
+      throw new NotFoundError(`User with id ${userId} not found`)
+    }
+
+    return await this.todosService.getAllTodosByUserId(userId)
   }
 
   async updateUser(id: string, updateUserDto: UpdateUserDto): Promise<User> {
@@ -85,6 +108,7 @@ export class UserService {
     return await this.userDatabaseService.updateUser(id, updateParams)
   }
 
+  // ? deferred TODO: seems like once user deleted all related todos should be also deleted
   async deleteUser(id: string): Promise<void> {
     return await this.userDatabaseService.deleteUser(id)
   }

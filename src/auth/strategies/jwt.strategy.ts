@@ -4,7 +4,10 @@ import { PassportStrategy } from '@nestjs/passport'
 import { ExtractJwt, Strategy } from 'passport-jwt'
 
 import { throwMissingEnvVar } from '../../common/utils/env.utils'
-import type { UserWithoutPassword } from '../../common/types/user.types'
+import type {
+  UserJwtPayload,
+  UserWithoutPassword,
+} from '../../common/types/user.types'
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -18,7 +21,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     })
   }
 
-  async validate({ sub, username }): Promise<UserWithoutPassword> {
-    return { _id: sub, username: username }
+  validate(payload: UserJwtPayload): UserWithoutPassword {
+    const payloadClone = globalThis.structuredClone(payload)
+    delete payloadClone.sub
+    return payloadClone
   }
 }

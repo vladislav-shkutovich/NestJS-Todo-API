@@ -7,8 +7,6 @@ import {
   Param,
   Patch,
   Post,
-  UsePipes,
-  ValidationPipe,
 } from '@nestjs/common'
 
 import { TODOS_ROUTE } from 'src/common/constants/routing.constants'
@@ -19,36 +17,35 @@ import { UpdateTodoDto } from './dto/update-todo.dto'
 import type { Todo } from './schemas/todos.schema'
 
 @Controller(TODOS_ROUTE)
-@UsePipes(ValidationPipe)
 export class TodosController {
   constructor(private readonly todosService: TodosService) {}
 
   @Post()
-  async create(@Body() createTodoDto: CreateTodoDto): Promise<Todo> {
-    return await this.todosService.create(createTodoDto)
+  async createTodo(@Body() createTodoDto: CreateTodoDto): Promise<Todo> {
+    return await this.todosService.createTodo(createTodoDto)
   }
 
   @Get()
-  async getAll(): Promise<Todo[]> {
-    return await this.todosService.getAll()
+  async getAllTodos(): Promise<Todo[]> {
+    return await this.todosService.getAllTodos()
   }
 
   @Get(':id')
-  async getById(@Param() params: IdParamDto): Promise<Todo> {
-    return await this.todosService.getById(params.id)
+  async getTodoById(@Param() params: IdParamDto): Promise<Todo> {
+    return await this.todosService.getTodoById(params.id)
   }
 
   @Patch(':id')
-  async update(
+  async updateTodo(
     @Param() params: IdParamDto,
     @Body() updateTodoDto: UpdateTodoDto,
   ): Promise<Todo> {
-    return await this.todosService.update(params.id, updateTodoDto)
+    return await this.todosService.updateTodo(params.id, updateTodoDto)
   }
 
   @Delete(':id')
   @HttpCode(204)
-  async delete(@Param() params: IdParamDto): Promise<void> {
-    await this.todosService.delete(params.id)
+  async deleteTodo(@Param() params: IdParamDto): Promise<void> {
+    await this.todosService.deleteTodo(params.id)
   }
 }

@@ -6,10 +6,12 @@ import { UserSchema } from './schemas/user.schema'
 import { UserController } from './user.controller'
 import { UserDatabaseService } from './user.database.service'
 import { UserService } from './user.service'
+import { TodosModule } from '../todos/todos.module'
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: USER_MODEL, schema: UserSchema }]),
+    TodosModule,
   ],
   providers: [UserService, UserDatabaseService],
   controllers: [UserController],

@@ -12,12 +12,17 @@ import type { User } from './schemas/user.schema'
 export class UserDatabaseService {
   constructor(@InjectModel(USER_MODEL) private userModel: Model<User>) {}
 
-  async isUserExist(username: string): Promise<boolean> {
+  async isUserExistByUsername(username: string): Promise<boolean> {
     const user = await this.userModel.findOne(
       { username },
       { _id: -1, username: 1 },
     )
     return !!user
+  }
+
+  async isUserExistById(id: string): Promise<boolean> {
+    const userById = await this.userModel.findById(id, { _id: 1 })
+    return !!userById
   }
 
   async createUser(createUserDto: CreateUserDto): Promise<User> {
@@ -26,17 +31,28 @@ export class UserDatabaseService {
     return createdUser.toObject()
   }
 
-  async findAllUsers(): Promise<User[]> {
+  async getAllUsers(): Promise<User[]> {
     const allUsers = await this.userModel.find()
 
     return allUsers.map((user) => user.toObject())
   }
 
-  async findUserByUsername(username: string): Promise<User> {
-    const user = await this.userModel.findOne({ username })
+  async getUserById(id: string): Promise<User> {
+    const userById = await this.userModel.findById(id)
+
+    if (!userById) {
+      throw new NotFoundError(`User with id ${id} not found`)
+    }
+
+    return userById.toObject()
+  }
+
+  async getUserByQuery(query: Record<string, any>): Promise<User> {
+    const user = await this.userModel.findOne(query)
 
     if (!user) {
-      throw new NotFoundError(`User with username ${username} not found`)
+      const queryKeys = Object.keys(query).join(', ')
+      throw new NotFoundError(`User not found by query: ${queryKeys}`)
     }
 
     return user.toObject()

@@ -35,13 +35,15 @@ describe('AuthService', () => {
     jest.resetAllMocks()
   })
 
-  describe('login()', () => {
+  describe('getAccessToken()', () => {
     it('should return an access token', async () => {
       const mockUser: User = {
         _id: new Types.ObjectId(),
         username: 'test',
         password: 'hashed',
+        todos: [],
       }
+      const mockJwtPayload = { ...mockUser, sub: mockUser._id }
       const mockToken = 'mockToken'
 
       jwtService.sign.mockReturnValue(mockToken)
@@ -49,10 +51,7 @@ describe('AuthService', () => {
       await expect(authService.getAccessToken(mockUser)).resolves.toEqual(
         mockToken,
       )
-      expect(jwtService.sign).toHaveBeenCalledWith({
-        username: mockUser.username,
-        sub: mockUser._id,
-      })
+      expect(jwtService.sign).toHaveBeenCalledWith(mockJwtPayload)
     })
   })
 })
