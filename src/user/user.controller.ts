@@ -7,8 +7,6 @@ import {
   Param,
   Patch,
   Post,
-  UsePipes,
-  ValidationPipe,
 } from '@nestjs/common'
 
 import { USERS_ROUTE } from '../common/constants/routing.constants'
@@ -21,7 +19,6 @@ import type { Todo } from '../todos/schemas/todos.schema'
 import type { User } from './schemas/user.schema'
 
 @Controller(USERS_ROUTE)
-@UsePipes(ValidationPipe)
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
@@ -41,14 +38,12 @@ export class UserController {
     return await this.userService.getUserById(params.id)
   }
 
+  // ? To be discussed later how to handle this logic in multiple roles in the most convenient way
   @Get(':id/todos')
   async getUserTodos(@Param() params: IdParamDto): Promise<Todo[]> {
     return await this.userService.getUserTodos(params.id)
   }
 
-  // ! TODO: - Allow to update only accepted user fileds (prevent updating user `todos` and `_id` for this case);
-  // The same for updateTodos and globally for other possible update endpoints
-  // ? Question: How I can do it without manual checking and filtering of the updating fields in UserService?
   @Patch(':id')
   async updateUser(
     @Param() params: IdParamDto,

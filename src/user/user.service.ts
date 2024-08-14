@@ -2,7 +2,11 @@ import { Injectable } from '@nestjs/common'
 import { randomBytes, scrypt, timingSafeEqual } from 'node:crypto'
 import { promisify } from 'node:util'
 
-import { ConflictError, ValidationError } from '../common/errors/errors'
+import {
+  ConflictError,
+  NotFoundError,
+  ValidationError,
+} from '../common/errors/errors'
 import { TodosService } from '../todos/todos.service'
 import { CreateUserDto } from './dto/create-user.dto'
 import { UpdateUserDto } from './dto/update-user.dto'
@@ -51,12 +55,16 @@ export class UserService {
     return user
   }
 
-  async isUserExist(username: string): Promise<boolean> {
-    return await this.userDatabaseService.isUserExist(username)
+  async isUserExistByUsername(username: string): Promise<boolean> {
+    return await this.userDatabaseService.isUserExistByUsername(username)
+  }
+
+  async isUserExistById(id: string): Promise<boolean> {
+    return await this.userDatabaseService.isUserExistById(id)
   }
 
   async createUser(createUserDto: CreateUserDto): Promise<User> {
-    const isDuplicate = await this.isUserExist(createUserDto.username)
+    const isDuplicate = await this.isUserExistByUsername(createUserDto.username)
 
     if (isDuplicate) {
       throw new ConflictError(
@@ -81,7 +89,11 @@ export class UserService {
   }
 
   async getUserTodos(userId: string): Promise<Todo[]> {
-    await this.getUserById(userId)
+    const isUserExist = await this.isUserExistById(userId)
+
+    if (!isUserExist) {
+      throw new NotFoundError(`User with id ${userId} not found`)
+    }
 
     return await this.todosService.getAllTodosByUserId(userId)
   }
@@ -96,6 +108,7 @@ export class UserService {
     return await this.userDatabaseService.updateUser(id, updateParams)
   }
 
+  // ? deferred TODO: seems like once user deleted all related todos should be also deleted
   async deleteUser(id: string): Promise<void> {
     return await this.userDatabaseService.deleteUser(id)
   }

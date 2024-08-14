@@ -7,8 +7,6 @@ import {
   Param,
   Patch,
   Post,
-  UsePipes,
-  ValidationPipe,
 } from '@nestjs/common'
 
 import { TODOS_ROUTE } from 'src/common/constants/routing.constants'
@@ -19,7 +17,6 @@ import { UpdateTodoDto } from './dto/update-todo.dto'
 import type { Todo } from './schemas/todos.schema'
 
 @Controller(TODOS_ROUTE)
-@UsePipes(ValidationPipe)
 export class TodosController {
   constructor(private readonly todosService: TodosService) {}
 

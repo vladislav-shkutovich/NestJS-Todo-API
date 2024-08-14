@@ -14,7 +14,7 @@ export class User {
   @Prop({ required: true })
   password: string
 
-  // ! TODO: - Configure setting user's 5-10 recent todos in every User entity;
+  // ? deferred TODO: - Configure setting user's 5-10 recent todos in every User entity;
   @Prop({ required: true, type: [Todo], default: [] })
   todos: Todo[]
 }

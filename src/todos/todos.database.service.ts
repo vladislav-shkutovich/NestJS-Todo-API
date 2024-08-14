@@ -21,7 +21,7 @@ export class TodosDatabaseService {
     return allTodos.map((todo) => todo.toObject())
   }
 
-  // ! TODO: Add some filters (time range, for example) and sorts for todos by user endpoint;
+  // ? deferred TODO: - Add some filters (time range, for example) and sorts for todos by user endpoint;
   async getAllTodosByUserId(userId: string): Promise<Todo[]> {
     const todosByUser = await this.todoModel.find({ userId })
     return todosByUser.map((todo) => todo.toObject())
