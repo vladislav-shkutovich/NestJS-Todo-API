@@ -24,16 +24,16 @@ export class Todo {
 
 const TodoSchema = SchemaFactory.createForClass(Todo)
 
-TodoSchema.post<TodoDocument>('save', async function (doc: TodoDocument, next) {
+TodoSchema.post<TodoDocument>('save', async function (doc: TodoDocument) {
   const UserModel: Model<UserDocument> = this.model('User')
   const user = await UserModel.findById(doc.userId)
 
   if (user) {
-    user.todos.push(doc)
+    user.todos.unshift(doc)
+    user.todos.splice(5)
+
     await user.save()
   }
-
-  next()
 })
 
 export { TodoSchema }
