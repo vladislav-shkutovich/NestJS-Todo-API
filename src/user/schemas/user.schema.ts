@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
-import { HydratedDocument, Types } from 'mongoose'
-import { Todo } from '../../todos/schemas/todos.schema'
+import { HydratedDocument, Model, Types } from 'mongoose'
+import { Todo, TodoDocument } from '../../todos/schemas/todos.schema'
 
 export type UserDocument = HydratedDocument<User>
 
@@ -14,9 +14,23 @@ export class User {
   @Prop({ required: true })
   password: string
 
-  // ? deferred TODO: - Configure setting user's 5-10 recent todos in every User entity;
   @Prop({ required: true, type: [Todo], default: [] })
   todos: Todo[]
 }
 
-export const UserSchema = SchemaFactory.createForClass(User)
+const UserSchema = SchemaFactory.createForClass(User)
+
+UserSchema.pre<UserDocument>('save', async function (next) {
+  if (this.isModified('todos')) {
+    const todoIds = this.todos.map((todo) => todo._id)
+    const TodoModel = this.model('Todo') as Model<TodoDocument>
+    const recentTodos = await TodoModel.find({ _id: { $in: todoIds } })
+      .sort({ createdAt: -1 })
+      .limit(5)
+
+    this.todos = recentTodos
+  }
+  next()
+})
+
+export { UserSchema }
