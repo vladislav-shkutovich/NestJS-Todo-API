@@ -4,6 +4,9 @@ import type { Todo } from './schemas/todos.schema'
 import { CreateTodoDto } from './dto/create-todo.dto'
 import { UpdateTodoDto } from './dto/update-todo.dto'
 
+// ? deferred TODO: - Bugfix: add checking if user exist for todo create and update phases;
+// Details: User can create todo with non-existing userId
+
 @Injectable()
 export class TodosService {
   constructor(private readonly todosDatabaseService: TodosDatabaseService) {}
