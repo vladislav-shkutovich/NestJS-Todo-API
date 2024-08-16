@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
 import { HydratedDocument, Model, Types } from 'mongoose'
 import { UserDocument } from '../../user/schemas/user.schema'
+import { getLastUserTodos } from '../../common/utils/todos.utils'
 
 export type TodoDocument = HydratedDocument<Todo>
 
@@ -29,11 +30,22 @@ TodoSchema.post<TodoDocument>('save', async function (doc: TodoDocument) {
   const user = await UserModel.findById(doc.userId)
 
   if (user) {
-    user.todos.unshift(doc)
-    user.todos.splice(5)
-
+    user.todos = getLastUserTodos(user.todos, doc)
     await user.save()
   }
 })
+
+TodoSchema.post<TodoDocument>(
+  'findOneAndUpdate',
+  async function (doc: TodoDocument) {
+    const UserModel: Model<UserDocument> = doc.$model('User')
+    const user = await UserModel.findById(doc.userId)
+
+    if (user) {
+      user.todos = getLastUserTodos(user.todos, doc)
+      await user.save()
+    }
+  },
+)
 
 export { TodoSchema }
