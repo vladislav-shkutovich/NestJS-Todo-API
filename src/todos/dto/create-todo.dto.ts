@@ -1,5 +1,4 @@
-import { IsString, IsNotEmpty, IsOptional, IsMongoId } from 'class-validator'
-import { Types } from 'mongoose'
+import { IsString, IsNotEmpty, IsOptional } from 'class-validator'
 
 export class CreateTodoDto {
   @IsString()
@@ -9,7 +8,4 @@ export class CreateTodoDto {
   @IsString()
   @IsOptional()
   description?: string
-
-  @IsMongoId()
-  userId: Types.ObjectId
 }

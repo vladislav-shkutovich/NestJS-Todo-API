@@ -1,18 +1,20 @@
 import { Injectable } from '@nestjs/common'
-import { TodosDatabaseService } from './todos.database.service'
-import type { Todo } from './schemas/todos.schema'
+import { Types } from 'mongoose'
+
 import { CreateTodoDto } from './dto/create-todo.dto'
 import { UpdateTodoDto } from './dto/update-todo.dto'
-
-// ? deferred TODO: - Bugfix: add checking if user exist for todo create and update phases;
-// Details: User can create todo with non-existing userId
+import { TodosDatabaseService } from './todos.database.service'
+import type { Todo } from './schemas/todos.schema'
 
 @Injectable()
 export class TodosService {
   constructor(private readonly todosDatabaseService: TodosDatabaseService) {}
 
-  async createTodo(createTodoDto: CreateTodoDto): Promise<Todo> {
-    return await this.todosDatabaseService.createTodo(createTodoDto)
+  async createTodo(
+    createTodoDto: CreateTodoDto,
+    userId: Types.ObjectId,
+  ): Promise<Todo> {
+    return await this.todosDatabaseService.createTodo(createTodoDto, userId)
   }
 
   async getAllTodos(): Promise<Todo[]> {
