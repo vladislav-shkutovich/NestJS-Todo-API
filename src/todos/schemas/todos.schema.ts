@@ -1,6 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
-import { HydratedDocument, Model, Types } from 'mongoose'
-import { UserDocument } from '../../user/schemas/user.schema'
+import { HydratedDocument, Types } from 'mongoose'
 
 export type TodoDocument = HydratedDocument<Todo>
 
@@ -22,40 +21,4 @@ export class Todo {
   updatedAt: Date
 }
 
-const TodoSchema = SchemaFactory.createForClass(Todo)
-
-TodoSchema.post<TodoDocument>('save', async function (doc: TodoDocument) {
-  const UserModel: Model<UserDocument> = this.model('User')
-  const user = await UserModel.findById(doc.userId)
-
-  user!.todos = user!.todos.reduce(
-    (todos, todo) => {
-      if (todos.length < 5) {
-        todos.push(todo)
-      }
-      return todos
-    },
-    [doc.toObject()],
-  )
-
-  await user!.save()
-})
-
-TodoSchema.post('findOneAndUpdate', async function (doc: TodoDocument) {
-  const UserModel: Model<UserDocument> = doc.$model('User')
-  const user = await UserModel.findById(doc.userId)
-
-  user!.todos = user!.todos.reduce(
-    (todos, todo) => {
-      if (todos.length < 5 && !todo._id.equals(doc._id)) {
-        todos.push(todo)
-      }
-      return todos
-    },
-    [doc.toObject()],
-  )
-
-  await user!.save()
-})
-
-export { TodoSchema }
+export const TodoSchema = SchemaFactory.createForClass(Todo)
