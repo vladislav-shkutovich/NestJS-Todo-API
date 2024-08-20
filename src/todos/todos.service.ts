@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common'
-import { Types } from 'mongoose'
 
 import { CreateTodoDto } from './dto/create-todo.dto'
 import { UpdateTodoDto } from './dto/update-todo.dto'
@@ -12,7 +11,7 @@ export class TodosService {
 
   async createTodo(
     createTodoDto: CreateTodoDto,
-    userId: Types.ObjectId,
+    userId: string,
   ): Promise<Todo> {
     return await this.todosDatabaseService.createTodo(createTodoDto, userId)
   }
@@ -31,7 +30,7 @@ export class TodosService {
 
   async updateTodo(
     todoId: string,
-    userId: Types.ObjectId,
+    userId: string,
     updateTodoDto: UpdateTodoDto,
   ): Promise<Todo> {
     return await this.todosDatabaseService.updateTodo(

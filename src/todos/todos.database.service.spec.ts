@@ -34,7 +34,7 @@ describe('TodosDatabaseService', () => {
 
   describe('updateTodo()', () => {
     const todoId = new Types.ObjectId().toString()
-    const userId = new Types.ObjectId()
+    const userId = new Types.ObjectId().toString()
     const updateParams: UpdateTodoDto = {
       title: 'Updated title',
       description: 'Updated description',

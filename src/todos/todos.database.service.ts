@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
-import { Model, Types } from 'mongoose'
+import { Model } from 'mongoose'
 
 import { TODO_MODEL } from '../common/constants/database.constants'
 import { NotFoundError } from '../common/errors/errors'
@@ -14,7 +14,7 @@ export class TodosDatabaseService {
 
   async createTodo(
     createTodoDto: CreateTodoDto,
-    userId: Types.ObjectId,
+    userId: string,
   ): Promise<Todo> {
     const createdTodo = await this.todoModel.create({
       userId,
@@ -46,7 +46,7 @@ export class TodosDatabaseService {
 
   async updateTodo(
     todoId: string,
-    userId: Types.ObjectId,
+    userId: string,
     updateTodoDto: UpdateTodoDto,
   ): Promise<Todo> {
     const updatedTodo = await this.todoModel.findByIdAndUpdate(
