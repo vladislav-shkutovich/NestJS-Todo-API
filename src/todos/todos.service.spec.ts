@@ -106,32 +106,34 @@ describe('TodosService', () => {
   })
 
   describe('updateTodo()', () => {
-    const id = new Types.ObjectId().toString()
+    const todoId = new Types.ObjectId().toString()
+    const userId = new Types.ObjectId()
     const updateParams: UpdateTodoDto = {
       description: 'test updated description',
     }
 
     it('should call method with correct arguments', async () => {
-      await todosService.updateTodo(id, updateParams)
+      await todosService.updateTodo(todoId, userId, updateParams)
       expect(todosDatabaseService.updateTodo).toHaveBeenCalledWith(
-        id,
+        todoId,
+        userId,
         updateParams,
       )
     })
 
     it('should return correct value', async () => {
       const updatedTodo: Todo = {
-        _id: new Types.ObjectId(id),
+        _id: new Types.ObjectId(todoId),
+        userId,
         title: 'Test title',
         description: updateParams.description,
         createdAt: new Date(),
         updatedAt: new Date(),
-        userId: new Types.ObjectId(),
       }
       todosDatabaseService.updateTodo.mockResolvedValue(updatedTodo)
-      await expect(todosService.updateTodo(id, updateParams)).resolves.toEqual(
-        updatedTodo,
-      )
+      await expect(
+        todosService.updateTodo(todoId, userId, updateParams),
+      ).resolves.toEqual(updatedTodo)
     })
   })
 

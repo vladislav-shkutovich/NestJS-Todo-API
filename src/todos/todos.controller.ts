@@ -44,8 +44,13 @@ export class TodosController {
   async updateTodo(
     @Param() params: IdParamDto,
     @Body() updateTodoDto: UpdateTodoDto,
+    @Request() req: ExpressRequest,
   ): Promise<Todo> {
-    return await this.todosService.updateTodo(params.id, updateTodoDto)
+    return await this.todosService.updateTodo(
+      params.id,
+      req.user._id,
+      updateTodoDto,
+    )
   }
 
   @Delete(':id')

@@ -44,17 +44,21 @@ export class TodosDatabaseService {
     return todoById.toObject()
   }
 
-  async updateTodo(id: string, updateTodoDto: UpdateTodoDto): Promise<Todo> {
+  async updateTodo(
+    todoId: string,
+    userId: Types.ObjectId,
+    updateTodoDto: UpdateTodoDto,
+  ): Promise<Todo> {
     const updatedTodo = await this.todoModel.findByIdAndUpdate(
-      id,
-      updateTodoDto,
+      todoId,
+      { userId, ...updateTodoDto },
       {
         new: true,
       },
     )
 
     if (!updatedTodo) {
-      throw new NotFoundError(`Todo with id ${id} not found`)
+      throw new NotFoundError(`Todo with id ${todoId} not found`)
     }
 
     return updatedTodo.toObject()

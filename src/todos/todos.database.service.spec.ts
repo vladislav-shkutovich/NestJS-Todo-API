@@ -33,13 +33,15 @@ describe('TodosDatabaseService', () => {
   })
 
   describe('updateTodo()', () => {
-    const id = new Types.ObjectId().toString()
+    const todoId = new Types.ObjectId().toString()
+    const userId = new Types.ObjectId()
     const updateParams: UpdateTodoDto = {
       title: 'Updated title',
       description: 'Updated description',
     }
     const updatedTodo = {
-      _id: id,
+      _id: todoId,
+      userId,
       title: updateParams.title,
       description: updateParams.description,
       toObject: jest.fn(),
@@ -47,10 +49,10 @@ describe('TodosDatabaseService', () => {
 
     it('should call method with correct arguments', async () => {
       mockTodoModel.findByIdAndUpdate.mockImplementation(() => updatedTodo)
-      await todosDatabaseService.updateTodo(id, updateParams)
+      await todosDatabaseService.updateTodo(todoId, userId, updateParams)
       expect(mockTodoModel.findByIdAndUpdate).toHaveBeenCalledWith(
-        id,
-        updateParams,
+        todoId,
+        { userId, ...updateParams },
         { new: true },
       )
     })
@@ -58,14 +60,14 @@ describe('TodosDatabaseService', () => {
     it('should return correct value', async () => {
       mockTodoModel.findByIdAndUpdate.mockReturnValue(updatedTodo)
       await expect(
-        todosDatabaseService.updateTodo(id, updateParams),
+        todosDatabaseService.updateTodo(todoId, userId, updateParams),
       ).resolves.toEqual(updatedTodo.toObject())
     })
 
     it('should throw NotFoundError if todo not found', async () => {
       mockTodoModel.findByIdAndUpdate.mockReturnValue(null)
       await expect(
-        todosDatabaseService.updateTodo('nonExistentId', updateParams),
+        todosDatabaseService.updateTodo('nonExistentId', userId, updateParams),
       ).rejects.toThrow(NotFoundError)
     })
   })
