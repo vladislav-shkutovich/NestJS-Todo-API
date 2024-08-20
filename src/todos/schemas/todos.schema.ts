@@ -28,38 +28,34 @@ TodoSchema.post<TodoDocument>('save', async function (doc: TodoDocument) {
   const UserModel: Model<UserDocument> = this.model('User')
   const user = await UserModel.findById(doc.userId)
 
-  if (user) {
-    user.todos = user.todos.reduce(
-      (todos, todo) => {
-        if (todos.length < 5) {
-          todos.push(todo)
-        }
-        return todos
-      },
-      [doc] as Todo[],
-    )
+  user!.todos = user!.todos.reduce(
+    (todos, todo) => {
+      if (todos.length < 5) {
+        todos.push(todo)
+      }
+      return todos
+    },
+    [doc.toObject()],
+  )
 
-    await user.save()
-  }
+  await user!.save()
 })
 
 TodoSchema.post('findOneAndUpdate', async function (doc: TodoDocument) {
   const UserModel: Model<UserDocument> = doc.$model('User')
   const user = await UserModel.findById(doc.userId)
 
-  if (user) {
-    user.todos = user.todos.reduce(
-      (todos, todo) => {
-        if (todos.length < 5 && !todo._id.equals(doc._id)) {
-          todos.push(todo)
-        }
-        return todos
-      },
-      [doc] as Todo[],
-    )
+  user!.todos = user!.todos.reduce(
+    (todos, todo) => {
+      if (todos.length < 5 && !todo._id.equals(doc._id)) {
+        todos.push(todo)
+      }
+      return todos
+    },
+    [doc.toObject()],
+  )
 
-    await user.save()
-  }
+  await user!.save()
 })
 
 export { TodoSchema }
