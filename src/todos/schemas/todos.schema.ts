@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
-import { HydratedDocument, Types } from 'mongoose'
+import { HydratedDocument, Model, Types } from 'mongoose'
+import { UserDocument } from '../../user/schemas/user.schema'
 
 export type TodoDocument = HydratedDocument<Todo>
 
@@ -21,7 +22,40 @@ export class Todo {
   updatedAt: Date
 }
 
-export const TodoSchema = SchemaFactory.createForClass(Todo)
+const TodoSchema = SchemaFactory.createForClass(Todo)
 
-// ? Question: is it an acceptable way to attach indexes here?
-TodoSchema.index({ userId: 1 })
+TodoSchema.post<TodoDocument>('save', async function (doc: TodoDocument) {
+  const UserModel: Model<UserDocument> = this.model('User')
+  const user = await UserModel.findById(doc.userId)
+
+  user!.todos = user!.todos.reduce(
+    (todos, todo) => {
+      if (todos.length < 5) {
+        todos.push(todo)
+      }
+      return todos
+    },
+    [doc.toObject()],
+  )
+
+  await user!.save()
+})
+
+TodoSchema.post('findOneAndUpdate', async function (doc: TodoDocument) {
+  const UserModel: Model<UserDocument> = doc.$model('User')
+  const user = await UserModel.findById(doc.userId)
+
+  user!.todos = user!.todos.reduce(
+    (todos, todo) => {
+      if (todos.length < 5 && !todo._id.equals(doc._id)) {
+        todos.push(todo)
+      }
+      return todos
+    },
+    [doc.toObject()],
+  )
+
+  await user!.save()
+})
+
+export { TodoSchema }

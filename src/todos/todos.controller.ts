@@ -7,7 +7,9 @@ import {
   Param,
   Patch,
   Post,
+  Request,
 } from '@nestjs/common'
+import type { Request as ExpressRequest } from 'express'
 
 import { TODOS_ROUTE } from 'src/common/constants/routing.constants'
 import { IdParamDto } from 'src/common/dto/id-param.dto'
@@ -21,8 +23,14 @@ export class TodosController {
   constructor(private readonly todosService: TodosService) {}
 
   @Post()
-  async createTodo(@Body() createTodoDto: CreateTodoDto): Promise<Todo> {
-    return await this.todosService.createTodo(createTodoDto)
+  async createTodo(
+    @Body() createTodoDto: CreateTodoDto,
+    @Request() req: ExpressRequest,
+  ): Promise<Todo> {
+    return await this.todosService.createTodo(
+      createTodoDto,
+      req.user._id.toString(),
+    )
   }
 
   @Get()
@@ -39,8 +47,13 @@ export class TodosController {
   async updateTodo(
     @Param() params: IdParamDto,
     @Body() updateTodoDto: UpdateTodoDto,
+    @Request() req: ExpressRequest,
   ): Promise<Todo> {
-    return await this.todosService.updateTodo(params.id, updateTodoDto)
+    return await this.todosService.updateTodo(
+      params.id,
+      req.user._id.toString(),
+      updateTodoDto,
+    )
   }
 
   @Delete(':id')

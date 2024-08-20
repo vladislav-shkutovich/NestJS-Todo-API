@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
 import { Model } from 'mongoose'
-import { TODO_MODEL } from 'src/common/constants/database.constants'
-import { NotFoundError } from 'src/common/errors/errors'
+
+import { TODO_MODEL } from '../common/constants/database.constants'
+import { NotFoundError } from '../common/errors/errors'
 import { CreateTodoDto } from './dto/create-todo.dto'
 import { UpdateTodoDto } from './dto/update-todo.dto'
 import type { Todo } from './schemas/todos.schema'
@@ -11,8 +12,14 @@ import type { Todo } from './schemas/todos.schema'
 export class TodosDatabaseService {
   constructor(@InjectModel(TODO_MODEL) private todoModel: Model<Todo>) {}
 
-  async createTodo(createTodoDto: CreateTodoDto): Promise<Todo> {
-    const createdTodo = await this.todoModel.create(createTodoDto)
+  async createTodo(
+    createTodoDto: CreateTodoDto,
+    userId: string,
+  ): Promise<Todo> {
+    const createdTodo = await this.todoModel.create({
+      userId,
+      ...createTodoDto,
+    })
     return createdTodo.toObject()
   }
 
@@ -37,17 +44,21 @@ export class TodosDatabaseService {
     return todoById.toObject()
   }
 
-  async updateTodo(id: string, updateTodoDto: UpdateTodoDto): Promise<Todo> {
+  async updateTodo(
+    todoId: string,
+    userId: string,
+    updateTodoDto: UpdateTodoDto,
+  ): Promise<Todo> {
     const updatedTodo = await this.todoModel.findByIdAndUpdate(
-      id,
-      updateTodoDto,
+      todoId,
+      { userId, ...updateTodoDto },
       {
         new: true,
       },
     )
 
     if (!updatedTodo) {
-      throw new NotFoundError(`Todo with id ${id} not found`)
+      throw new NotFoundError(`Todo with id ${todoId} not found`)
     }
 
     return updatedTodo.toObject()
