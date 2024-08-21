@@ -10,6 +10,7 @@ import type { User } from '../user/schemas/user.schema'
 @Injectable()
 export class TodosChangeStreamService implements OnModuleInit, OnModuleDestroy {
   private changeStream: ChangeStream
+  private resumeToken: unknown
 
   constructor(
     @InjectModel(TODO_MODEL) private todoModel: Model<Todo>,
@@ -32,10 +33,15 @@ export class TodosChangeStreamService implements OnModuleInit, OnModuleDestroy {
         },
       },
     ]
+    const changeStreamOptions = this.resumeToken
+      ? { startAfter: this.resumeToken }
+      : {}
 
-    this.changeStream = this.todoModel.watch(pipeline)
+    this.changeStream = this.todoModel.watch(pipeline, changeStreamOptions)
 
     this.changeStream.on('change', async (changeStreamDoc) => {
+      this.resumeToken = changeStreamDoc._id
+
       if (changeStreamDoc.operationType === 'insert') {
         const createdTodo = changeStreamDoc.fullDocument as Todo
         const user = await this.userModel.findById(createdTodo.userId)
@@ -59,6 +65,7 @@ export class TodosChangeStreamService implements OnModuleInit, OnModuleDestroy {
         const updatedTodo = await this.todoModel.findById(
           changeStreamDoc.documentKey._id,
         )
+
         if (updatedTodo) {
           const user = await this.userModel.findById(updatedTodo.userId)
 
