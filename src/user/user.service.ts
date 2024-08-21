@@ -108,7 +108,6 @@ export class UserService {
     return await this.userDatabaseService.updateUser(id, updateParams)
   }
 
-  // ? deferred TODO: seems like once user deleted all related todos should be also deleted
   async deleteUser(id: string): Promise<void> {
     return await this.userDatabaseService.deleteUser(id)
   }

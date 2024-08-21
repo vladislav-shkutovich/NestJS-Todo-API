@@ -1,112 +1,86 @@
-import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common'
+import { Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
 import { Model } from 'mongoose'
-import type { ChangeStream } from 'mongodb'
+import type { ChangeStreamDocument } from 'mongodb'
 
 import { TODO_MODEL, USER_MODEL } from '../common/constants/database.constants'
-import type { Todo } from './schemas/todos.schema'
+import { ChangeStreamService } from '../common/services/change-stream.service'
 import type { User } from '../user/schemas/user.schema'
-
-// TODO: - Refactor User and Todo change stream services using abstract class to reuse common logic;
+import type { Todo } from './schemas/todos.schema'
 
 @Injectable()
-export class TodosChangeStreamService implements OnModuleInit, OnModuleDestroy {
-  private changeStream: ChangeStream
-  private resumeToken: unknown
-
+export class TodosChangeStreamService extends ChangeStreamService<Todo> {
   constructor(
-    @InjectModel(TODO_MODEL) private todoModel: Model<Todo>,
-    @InjectModel(USER_MODEL) private userModel: Model<User>,
-  ) {}
-
-  async onModuleInit() {
-    this.openChangeStream()
-  }
-
-  async onModuleDestroy() {
-    this.closeChangeStream()
-  }
-
-  private async openChangeStream() {
-    const pipeline = [
+    @InjectModel(TODO_MODEL) private readonly todoModel: Model<Todo>,
+    @InjectModel(USER_MODEL) private readonly userModel: Model<User>,
+  ) {
+    super(todoModel, [
       {
         $match: {
           operationType: { $in: ['insert', 'update', 'delete'] },
         },
       },
-    ]
-    const changeStreamOptions = this.resumeToken
-      ? { startAfter: this.resumeToken }
-      : {}
+    ])
+  }
 
-    this.changeStream = this.todoModel.watch(pipeline, changeStreamOptions)
+  protected async handleChange(changeStreamDoc: ChangeStreamDocument) {
+    if (changeStreamDoc.operationType === 'insert') {
+      const createdTodo = changeStreamDoc.fullDocument as Todo
+      const user = await this.userModel.findById(createdTodo.userId)
 
-    this.changeStream.on('change', async (changeStreamDoc) => {
-      this.resumeToken = changeStreamDoc._id
+      if (user) {
+        user.todos = user.todos.reduce(
+          (todos, todo) => {
+            if (todos.length < 5) {
+              todos.push(todo)
+            }
+            return todos
+          },
+          [createdTodo],
+        )
 
-      if (changeStreamDoc.operationType === 'insert') {
-        const createdTodo = changeStreamDoc.fullDocument as Todo
-        const user = await this.userModel.findById(createdTodo.userId)
+        await user.save()
+      }
+    }
+
+    if (changeStreamDoc.operationType === 'update') {
+      const updatedTodo = await this.todoModel.findById(
+        changeStreamDoc.documentKey._id,
+      )
+
+      if (updatedTodo) {
+        const user = await this.userModel.findById(updatedTodo.userId)
 
         if (user) {
           user.todos = user.todos.reduce(
             (todos, todo) => {
-              if (todos.length < 5) {
+              if (todos.length < 5 && !todo._id.equals(updatedTodo._id)) {
                 todos.push(todo)
               }
               return todos
             },
-            [createdTodo],
+            [updatedTodo.toObject()],
           )
 
           await user.save()
         }
       }
+    }
 
-      if (changeStreamDoc.operationType === 'update') {
-        const updatedTodo = await this.todoModel.findById(
-          changeStreamDoc.documentKey._id,
-        )
+    if (changeStreamDoc.operationType === 'delete') {
+      const deletedTodoId = changeStreamDoc.documentKey._id
+      const user = await this.userModel.findOne({
+        'todos._id': deletedTodoId,
+      })
 
-        if (updatedTodo) {
-          const user = await this.userModel.findById(updatedTodo.userId)
+      if (user) {
+        user.todos = await this.todoModel
+          .find({ userId: user._id.toString() })
+          .sort({ updatedAt: -1 })
+          .limit(5)
 
-          if (user) {
-            user.todos = user.todos.reduce(
-              (todos, todo) => {
-                if (todos.length < 5 && !todo._id.equals(updatedTodo._id)) {
-                  todos.push(todo)
-                }
-                return todos
-              },
-              [updatedTodo.toObject()],
-            )
-
-            await user.save()
-          }
-        }
+        await user.save()
       }
-
-      if (changeStreamDoc.operationType === 'delete') {
-        const deletedTodoId = changeStreamDoc.documentKey._id
-        const user = await this.userModel.findOne({
-          'todos._id': deletedTodoId,
-        })
-
-        if (user) {
-          user.todos = await this.todoModel
-            // ? Question: discuss on call with Zhenya `_id.toString()`, `new ObjectId("...")` and so on.
-            .find({ userId: user._id.toString() })
-            .sort({ updatedAt: -1 })
-            .limit(5)
-
-          await user.save()
-        }
-      }
-    })
-  }
-
-  private async closeChangeStream() {
-    this.changeStream.close()
+    }
   }
 }
