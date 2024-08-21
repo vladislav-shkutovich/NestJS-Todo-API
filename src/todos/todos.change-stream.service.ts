@@ -7,6 +7,8 @@ import { TODO_MODEL, USER_MODEL } from '../common/constants/database.constants'
 import type { Todo } from './schemas/todos.schema'
 import type { User } from '../user/schemas/user.schema'
 
+// TODO: - Refactor User and Todo change stream services using abstract class to reuse common logic;
+
 @Injectable()
 export class TodosChangeStreamService implements OnModuleInit, OnModuleDestroy {
   private changeStream: ChangeStream
@@ -93,6 +95,7 @@ export class TodosChangeStreamService implements OnModuleInit, OnModuleDestroy {
 
         if (user) {
           user.todos = await this.todoModel
+            // ? Question: discuss on call with Zhenya `_id.toString()`, `new ObjectId("...")` and so on.
             .find({ userId: user._id.toString() })
             .sort({ updatedAt: -1 })
             .limit(5)
