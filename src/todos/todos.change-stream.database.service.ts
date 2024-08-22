@@ -5,11 +5,13 @@ import type { ChangeStreamDocument } from 'mongodb'
 
 import { TODO_MODEL, USER_MODEL } from '../common/constants/database.constants'
 import { ChangeStreamService } from '../common/services/change-stream.service'
-import type { User } from '../user/schemas/user.schema'
 import type { Todo } from './schemas/todos.schema'
+import type { User } from '../user/schemas/user.schema'
 
 @Injectable()
 export class TodosChangeStreamDatabaseService extends ChangeStreamService<Todo> {
+  eventListeners = new Map()
+
   constructor(
     @InjectModel(TODO_MODEL) private readonly todoModel: Model<Todo>,
     @InjectModel(USER_MODEL) private readonly userModel: Model<User>,
@@ -21,6 +23,12 @@ export class TodosChangeStreamDatabaseService extends ChangeStreamService<Todo> 
         },
       },
     ])
+  }
+
+  addEventListener(event, callback) {
+    if (this.eventListeners.has(event)) {
+      this.eventListeners.get(event).push(callback)
+    } else this.eventListeners.set(event, [callback])
   }
 
   protected async handleChange(changeStreamDoc: ChangeStreamDocument) {
@@ -48,23 +56,9 @@ export class TodosChangeStreamDatabaseService extends ChangeStreamService<Todo> 
         changeStreamDoc.documentKey._id,
       )
 
-      if (updatedTodo) {
-        const user = await this.userModel.findById(updatedTodo.userId)
-
-        if (user) {
-          user.todos = user.todos.reduce(
-            (todos, todo) => {
-              if (todos.length < 5 && !todo._id.equals(updatedTodo._id)) {
-                todos.push(todo)
-              }
-              return todos
-            },
-            [updatedTodo.toObject()],
-          )
-
-          await user.save()
-        }
-      }
+      this.eventListeners.get('update').forEach((callback) => {
+        callback(updatedTodo?.userId, updatedTodo)
+      })
     }
 
     if (changeStreamDoc.operationType === 'delete') {

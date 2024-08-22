@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, OnModuleInit } from '@nestjs/common'
 import { randomBytes, scrypt, timingSafeEqual } from 'node:crypto'
 import { promisify } from 'node:util'
 
@@ -7,6 +7,7 @@ import {
   NotFoundError,
   ValidationError,
 } from '../common/errors/errors'
+import { TodosChangeStreamDatabaseService } from '../todos/todos.change-stream.database.service'
 import { TodosService } from '../todos/todos.service'
 import { CreateUserDto } from './dto/create-user.dto'
 import { UpdateUserDto } from './dto/update-user.dto'
@@ -17,12 +18,20 @@ import type { User } from './schemas/user.schema'
 const scryptAsync = promisify(scrypt)
 
 @Injectable()
-export class UserService {
+export class UserService implements OnModuleInit {
   constructor(
     private readonly userDatabaseService: UserDatabaseService,
     private readonly todosService: TodosService,
+    private readonly todosChangeStreamDatabaseService: TodosChangeStreamDatabaseService,
   ) {}
   private readonly keyLength = 64
+
+  onModuleInit() {
+    this.todosChangeStreamDatabaseService.addEventListener(
+      'update',
+      this.updateUserRecentTodos.bind(this),
+    )
+  }
 
   private async hashPassword(password: string): Promise<string> {
     const salt = randomBytes(16).toString('hex')
@@ -106,6 +115,24 @@ export class UserService {
     }
 
     return await this.userDatabaseService.updateUser(id, updateParams)
+  }
+
+  async updateUserRecentTodos(userId: string, latestTodo: Todo) {
+    const user = await this.getUserById(userId)
+
+    const updatedTodos = user.todos.reduce(
+      (todos, todo) => {
+        if (todos.length < 5 && !todo._id.equals(latestTodo._id)) {
+          todos.push(todo)
+        }
+        return todos
+      },
+      [latestTodo],
+    )
+
+    return await this.userDatabaseService.updateUser(userId, {
+      todos: updatedTodos,
+    })
   }
 
   async deleteUser(id: string): Promise<void> {

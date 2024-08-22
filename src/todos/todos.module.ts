@@ -22,6 +22,6 @@ import { TodosService } from './todos.service'
     TodosChangeStreamDatabaseService,
   ],
   controllers: [TodosController],
-  exports: [TodosService],
+  exports: [TodosService, TodosChangeStreamDatabaseService],
 })
 export class TodosModule {}
