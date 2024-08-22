@@ -7,7 +7,7 @@ import type {
   ChangeStreamDocument,
 } from 'mongodb'
 
-export abstract class ChangeStreamService<T>
+export abstract class ChangeStreamService<T, M extends Model<T> = Model<T>>
   implements OnModuleInit, OnModuleDestroy
 {
   private changeStream: ChangeStream
@@ -15,7 +15,7 @@ export abstract class ChangeStreamService<T>
 
   constructor(
     protected readonly model: Model<T>,
-    protected readonly pipeline: Array<Record<string, unknown>>,
+    protected readonly pipeline: Parameters<M['watch']>[0],
   ) {}
 
   async onModuleInit() {

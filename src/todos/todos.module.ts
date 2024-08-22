@@ -4,7 +4,7 @@ import { MongooseModule } from '@nestjs/mongoose'
 import { TODO_MODEL, USER_MODEL } from '../common/constants/database.constants'
 import { UserSchema } from '../user/schemas/user.schema'
 import { TodoSchema } from './schemas/todos.schema'
-import { TodosChangeStreamService } from './todos.change-stream.service'
+import { TodosChangeStreamDatabaseService } from './todos.change-stream.database.service'
 import { TodosController } from './todos.controller'
 import { TodosDatabaseService } from './todos.database.service'
 import { TodosService } from './todos.service'
@@ -16,7 +16,11 @@ import { TodosService } from './todos.service'
       { name: USER_MODEL, schema: UserSchema },
     ]),
   ],
-  providers: [TodosService, TodosDatabaseService, TodosChangeStreamService],
+  providers: [
+    TodosService,
+    TodosDatabaseService,
+    TodosChangeStreamDatabaseService,
+  ],
   controllers: [TodosController],
   exports: [TodosService],
 })

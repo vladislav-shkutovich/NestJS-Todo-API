@@ -9,7 +9,7 @@ import type { User } from '../user/schemas/user.schema'
 import type { Todo } from './schemas/todos.schema'
 
 @Injectable()
-export class TodosChangeStreamService extends ChangeStreamService<Todo> {
+export class TodosChangeStreamDatabaseService extends ChangeStreamService<Todo> {
   constructor(
     @InjectModel(TODO_MODEL) private readonly todoModel: Model<Todo>,
     @InjectModel(USER_MODEL) private readonly userModel: Model<User>,
