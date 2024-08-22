@@ -19,14 +19,14 @@ export abstract class ChangeStreamService<T>
   ) {}
 
   async onModuleInit() {
-    this.openChangeStream()
+    this.addChangeStreamListener()
   }
 
   async onModuleDestroy() {
-    this.closeChangeStream()
+    this.removeChangeStreamListener()
   }
 
-  private openChangeStream() {
+  private addChangeStreamListener() {
     const changeStreamOptions: ChangeStreamOptions = this.resumeToken
       ? { startAfter: this.resumeToken }
       : {}
@@ -40,7 +40,7 @@ export abstract class ChangeStreamService<T>
     })
   }
 
-  private closeChangeStream() {
+  private removeChangeStreamListener() {
     this.changeStream.close()
   }
 

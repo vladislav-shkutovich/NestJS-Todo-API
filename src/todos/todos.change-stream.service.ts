@@ -73,7 +73,7 @@ export class TodosChangeStreamService extends ChangeStreamService<Todo> {
         'todos._id': deletedTodoId,
       })
 
-      if (user) {
+      if (user?.todos?.some((todo) => todo._id.equals(deletedTodoId))) {
         user.todos = await this.todoModel
           .find({ userId: user._id.toString() })
           .sort({ updatedAt: -1 })
