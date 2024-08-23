@@ -3,6 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing'
 import { Types } from 'mongoose'
 
 import { ConflictError, ValidationError } from '../common/errors/errors'
+import { TodosChangeStreamDatabaseService } from '../todos/todos.change-stream.database.service'
 import { TodosService } from '../todos/todos.service'
 import { CreateUserDto } from './dto/create-user.dto'
 import { User } from './schemas/user.schema'
@@ -15,6 +16,7 @@ describe('UserService', () => {
   let userService: UserService
   let userDatabaseService: DeepMocked<UserDatabaseService>
   let todosService: DeepMocked<TodosService>
+  let _todosChangeStreamDatabaseService: DeepMocked<TodosChangeStreamDatabaseService>
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -28,6 +30,10 @@ describe('UserService', () => {
           provide: TodosService,
           useValue: createMock<TodosService>(),
         },
+        {
+          provide: TodosChangeStreamDatabaseService,
+          useValue: createMock<TodosChangeStreamDatabaseService>(),
+        },
       ],
     }).compile()
 
@@ -35,6 +41,9 @@ describe('UserService', () => {
     userDatabaseService =
       module.get<DeepMocked<UserDatabaseService>>(UserDatabaseService)
     todosService = module.get<DeepMocked<TodosService>>(TodosService)
+    _todosChangeStreamDatabaseService = module.get<
+      DeepMocked<TodosChangeStreamDatabaseService>
+    >(TodosChangeStreamDatabaseService)
   })
 
   afterEach(() => {
@@ -187,9 +196,13 @@ describe('UserService', () => {
   describe('getUserTodos()', () => {
     const userId = new Types.ObjectId().toString()
     it('should call method with correct arguments', async () => {
-      await userService.getUserTodos(userId)
+      const queryOptions = {}
+      await userService.getUserTodos(userId, queryOptions)
 
-      expect(todosService.getAllTodosByUserId).toHaveBeenCalledWith(userId)
+      expect(todosService.getAllTodosByUserId).toHaveBeenCalledWith(
+        userId,
+        queryOptions,
+      )
     })
 
     it('should return correct value', async () => {
