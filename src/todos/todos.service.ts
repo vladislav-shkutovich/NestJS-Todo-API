@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common'
+import { QueryOptions } from 'mongoose'
 
 import { CreateTodoDto } from './dto/create-todo.dto'
 import { UpdateTodoDto } from './dto/update-todo.dto'
@@ -20,8 +21,11 @@ export class TodosService {
     return await this.todosDatabaseService.getAllTodos()
   }
 
-  async getAllTodosByUserId(userId: string): Promise<Todo[]> {
-    return await this.todosDatabaseService.getAllTodosByUserId(userId)
+  async getAllTodosByUserId(
+    userId: string,
+    options?: QueryOptions,
+  ): Promise<Todo[]> {
+    return await this.todosDatabaseService.getAllTodosByUserId(userId, options)
   }
 
   async getTodoById(id: string): Promise<Todo> {

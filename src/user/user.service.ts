@@ -1,4 +1,5 @@
 import { Injectable, OnModuleInit } from '@nestjs/common'
+import { QueryOptions } from 'mongoose'
 import { randomBytes, scrypt, timingSafeEqual } from 'node:crypto'
 import { promisify } from 'node:util'
 
@@ -97,14 +98,14 @@ export class UserService implements OnModuleInit {
     return await this.userDatabaseService.getUserById(id)
   }
 
-  async getUserTodos(userId: string): Promise<Todo[]> {
+  async getUserTodos(userId: string, options?: QueryOptions): Promise<Todo[]> {
     const isUserExist = await this.isUserExistById(userId)
 
     if (!isUserExist) {
       throw new NotFoundError(`User with id ${userId} not found`)
     }
 
-    return await this.todosService.getAllTodosByUserId(userId)
+    return await this.todosService.getAllTodosByUserId(userId, options)
   }
 
   async updateUser(id: string, updateUserDto: UpdateUserDto): Promise<User> {

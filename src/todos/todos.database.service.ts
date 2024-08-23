@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
-import { Model } from 'mongoose'
+import { Model, QueryOptions } from 'mongoose'
 
 import { TODO_MODEL } from '../common/constants/database.constants'
 import { NotFoundError } from '../common/errors/errors'
@@ -28,9 +28,11 @@ export class TodosDatabaseService {
     return allTodos.map((todo) => todo.toObject())
   }
 
-  // ? deferred TODO: - Add some filters (time range, for example) and sorts for todos by user endpoint;
-  async getAllTodosByUserId(userId: string): Promise<Todo[]> {
-    const todosByUser = await this.todoModel.find({ userId })
+  async getAllTodosByUserId(
+    userId: string,
+    options: QueryOptions = {},
+  ): Promise<Todo[]> {
+    const todosByUser = await this.todoModel.find({ userId }, null, options)
     return todosByUser.map((todo) => todo.toObject())
   }
 
