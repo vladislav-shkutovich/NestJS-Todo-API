@@ -34,21 +34,10 @@ export class TodosChangeStreamDatabaseService extends ChangeStreamService<Todo> 
   protected async handleChange(changeStreamDoc: ChangeStreamDocument) {
     if (changeStreamDoc.operationType === 'insert') {
       const createdTodo = changeStreamDoc.fullDocument as Todo
-      const user = await this.userModel.findById(createdTodo.userId)
 
-      if (user) {
-        user.todos = user.todos.reduce(
-          (todos, todo) => {
-            if (todos.length < 5) {
-              todos.push(todo)
-            }
-            return todos
-          },
-          [createdTodo],
-        )
-
-        await user.save()
-      }
+      this.eventListeners.get('create').forEach((callback) => {
+        callback(createdTodo?.userId, createdTodo)
+      })
     }
 
     if (changeStreamDoc.operationType === 'update') {

@@ -29,6 +29,11 @@ export class UserService implements OnModuleInit {
 
   onModuleInit() {
     this.todosChangeStreamDatabaseService.addEventListener(
+      'create',
+      this.updateUserRecentTodos.bind(this),
+    )
+
+    this.todosChangeStreamDatabaseService.addEventListener(
       'update',
       this.updateUserRecentTodos.bind(this),
     )
