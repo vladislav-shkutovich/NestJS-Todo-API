@@ -3,6 +3,7 @@ import { QueryOptions } from 'mongoose'
 import { randomBytes, scrypt, timingSafeEqual } from 'node:crypto'
 import { promisify } from 'node:util'
 
+import { USER_RECENT_TODOS_COUNT } from '../common/constants/user.constants'
 import {
   ConflictError,
   NotFoundError,
@@ -35,6 +36,11 @@ export class UserService implements OnModuleInit {
 
     this.todosChangeStreamDatabaseService.addEventListener(
       'update',
+      this.updateUserRecentTodos.bind(this),
+    )
+
+    this.todosChangeStreamDatabaseService.addEventListener(
+      'delete',
       this.updateUserRecentTodos.bind(this),
     )
   }
@@ -123,21 +129,29 @@ export class UserService implements OnModuleInit {
     return await this.userDatabaseService.updateUser(id, updateParams)
   }
 
-  async updateUserRecentTodos(userId: string, latestTodo: Todo) {
-    const user = await this.getUserById(userId)
+  async updateUserRecentTodos(userId: string, newLatestTodo?: Todo) {
+    const recentUserTodos = await this.getUserTodos(userId, {
+      sort: { updatedAt: -1 },
+      limit: USER_RECENT_TODOS_COUNT,
+    })
 
-    const updatedTodos = user.todos.reduce(
-      (todos, todo) => {
-        if (todos.length < 5 && !todo._id.equals(latestTodo._id)) {
-          todos.push(todo)
-        }
-        return todos
-      },
-      [latestTodo],
-    )
+    const todosToUpdate = newLatestTodo
+      ? recentUserTodos.reduce(
+          (todos, todo) => {
+            if (
+              todos.length < USER_RECENT_TODOS_COUNT &&
+              !todo._id.equals(newLatestTodo._id)
+            ) {
+              todos.push(todo)
+            }
+            return todos
+          },
+          [newLatestTodo],
+        )
+      : recentUserTodos
 
     return await this.userDatabaseService.updateUser(userId, {
-      todos: updatedTodos,
+      todos: todosToUpdate,
     })
   }
 

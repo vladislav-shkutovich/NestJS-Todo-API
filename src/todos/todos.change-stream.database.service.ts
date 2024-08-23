@@ -55,15 +55,14 @@ export class TodosChangeStreamDatabaseService extends ChangeStreamService<Todo> 
       const user = await this.userModel.findOne({
         'todos._id': deletedTodoId,
       })
+      const isDeletedTodoInUser = user?.todos?.some((todo) =>
+        todo._id.equals(deletedTodoId),
+      )
 
-      if (user?.todos?.some((todo) => todo._id.equals(deletedTodoId))) {
-        user.todos = await this.todoModel
-          .find({ userId: user._id.toString() })
-          .sort({ updatedAt: -1 })
-          .limit(5)
-
-        await user.save()
-      }
+      if (isDeletedTodoInUser)
+        this.eventListeners.get('delete').forEach((callback) => {
+          callback(user?._id.toString())
+        })
     }
   }
 }
