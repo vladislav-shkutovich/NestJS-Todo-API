@@ -3,19 +3,18 @@ import { InjectModel } from '@nestjs/mongoose'
 import { Model } from 'mongoose'
 import type { ChangeStreamDocument } from 'mongodb'
 
-import { OPERATIONS } from '../common/constants/common.constants'
+import { Operations } from '../common/constants/common.constants'
 import { TODO_MODEL, USER_MODEL } from '../common/constants/database.constants'
 import { ChangeStreamService } from '../common/services/change-stream.service'
-import type {
-  OperationCallback,
-  OperationType,
-} from '../common/types/common.types'
+import type { OperationCallback } from '../common/types/common.types'
 import type { User } from '../user/schemas/user.schema'
 import type { Todo } from './schemas/todos.schema'
 
 @Injectable()
 export class TodosChangeStreamDatabaseService extends ChangeStreamService<Todo> {
-  eventListeners = new Map<OperationType, OperationCallback[]>()
+  private eventListeners = new Map<Operations, OperationCallback[]>(
+    Object.values(Operations).map((operation) => [operation, []]),
+  )
 
   constructor(
     @InjectModel(TODO_MODEL) private readonly todoModel: Model<Todo>,
@@ -25,23 +24,23 @@ export class TodosChangeStreamDatabaseService extends ChangeStreamService<Todo> 
       {
         $match: {
           operationType: {
-            $in: [OPERATIONS.INSERT, OPERATIONS.UPDATE, OPERATIONS.DELETE],
+            $in: ['insert', 'update', 'delete'],
           },
         },
       },
     ])
   }
 
-  addEventListener(event: OperationType, callback: OperationCallback) {
+  addEventListener(event: Operations, callback: OperationCallback) {
     if (this.eventListeners.has(event)) {
       this.eventListeners.get(event)!.push(callback)
     } else this.eventListeners.set(event, [callback])
   }
 
   protected async handleChange(changeStreamDoc: ChangeStreamDocument) {
-    if (changeStreamDoc.operationType === OPERATIONS.INSERT) {
+    if (changeStreamDoc.operationType === 'insert') {
       const createdTodo = changeStreamDoc.fullDocument as Todo
-      const insertCallbacks = this.eventListeners.get(OPERATIONS.INSERT)
+      const insertCallbacks = this.eventListeners.get(Operations.INSERT)
 
       if (insertCallbacks) {
         insertCallbacks.forEach((callback) => {
@@ -50,11 +49,12 @@ export class TodosChangeStreamDatabaseService extends ChangeStreamService<Todo> 
       }
     }
 
-    if (changeStreamDoc.operationType === OPERATIONS.UPDATE) {
+    if (changeStreamDoc.operationType === 'update') {
+      // TODO: - Get fullDocument from update lookup instead of finding user in DB for its id;
       const updatedTodo = await this.todoModel.findById(
         changeStreamDoc.documentKey._id,
       )
-      const updateCallbacks = this.eventListeners.get(OPERATIONS.UPDATE)
+      const updateCallbacks = this.eventListeners.get(Operations.UPDATE)
 
       if (updatedTodo && updateCallbacks) {
         updateCallbacks.forEach((callback) => {
@@ -63,10 +63,11 @@ export class TodosChangeStreamDatabaseService extends ChangeStreamService<Todo> 
       }
     }
 
-    if (changeStreamDoc.operationType === OPERATIONS.DELETE) {
+    if (changeStreamDoc.operationType === 'delete') {
       const deletedTodoId = changeStreamDoc.documentKey._id
-      const deleteCallbacks = this.eventListeners.get(OPERATIONS.DELETE)
+      const deleteCallbacks = this.eventListeners.get(Operations.DELETE)
 
+      // TODO: - Get fullDocument from update lookup instead of finding user in DB for its id;
       const user = await this.userModel.findOne({
         'todos._id': deletedTodoId,
       })

@@ -1,5 +1,7 @@
-export const OPERATIONS = {
-  INSERT: 'insert' as const,
-  UPDATE: 'update' as const,
-  DELETE: 'delete' as const,
-}
+export const Operations = {
+  INSERT: 'insert',
+  UPDATE: 'update',
+  DELETE: 'delete',
+} as const
+
+export type Operations = (typeof Operations)[keyof typeof Operations]

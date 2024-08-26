@@ -1,9 +1,7 @@
 import type { QueryOptions as MongooseQueryOptions } from 'mongoose'
 
-import { OPERATIONS } from '../constants/common.constants'
-
+// TODO: - Don't rely on Mongoose in all application types (update all query types code);
 export type QueryOptions = MongooseQueryOptions
 
-export type OperationType = (typeof OPERATIONS)[keyof typeof OPERATIONS]
-
+// TODO: - Improve typing for Change Stream callbacks;
 export type OperationCallback = (...payload: any) => Promise<void>

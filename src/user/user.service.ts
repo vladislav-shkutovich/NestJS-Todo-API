@@ -2,7 +2,7 @@ import { Injectable, OnModuleInit } from '@nestjs/common'
 import { randomBytes, scrypt, timingSafeEqual } from 'node:crypto'
 import { promisify } from 'node:util'
 
-import { OPERATIONS } from '../common/constants/common.constants'
+import { Operations } from '../common/constants/common.constants'
 import { USER_RECENT_TODOS_COUNT } from '../common/constants/user.constants'
 import {
   ConflictError,
@@ -14,7 +14,7 @@ import { TodosService } from '../todos/todos.service'
 import { CreateUserDto } from './dto/create-user.dto'
 import { UpdateUserDto } from './dto/update-user.dto'
 import { UserDatabaseService } from './user.database.service'
-import type { OperationType, QueryOptions } from '../common/types/common.types'
+import type { QueryOptions } from '../common/types/common.types'
 import type { Todo } from '../todos/schemas/todos.schema'
 import type { User } from './schemas/user.schema'
 
@@ -30,10 +30,10 @@ export class UserService implements OnModuleInit {
   private readonly keyLength = 64
 
   onModuleInit() {
-    const relatedTodoEvents: OperationType[] = [
-      OPERATIONS.INSERT,
-      OPERATIONS.UPDATE,
-      OPERATIONS.DELETE,
+    const relatedTodoEvents: Operations[] = [
+      Operations.INSERT,
+      Operations.UPDATE,
+      Operations.DELETE,
     ]
 
     relatedTodoEvents.forEach((event) => {

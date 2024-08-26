@@ -34,9 +34,12 @@ export abstract class ChangeStreamService<T, M extends Model<T> = Model<T>>
     this.changeStream = this.model.watch(this.pipeline, changeStreamOptions)
 
     this.changeStream.on('change', async (changeStreamDoc) => {
-      this.resumeToken = changeStreamDoc._id
-
-      await this.handleChange(changeStreamDoc)
+      try {
+        this.resumeToken = changeStreamDoc._id
+        await this.handleChange(changeStreamDoc)
+      } catch (error) {
+        console.error(error)
+      }
     })
   }
 
