@@ -1,8 +1,8 @@
 import { Injectable, OnModuleInit } from '@nestjs/common'
-import { QueryOptions } from 'mongoose'
 import { randomBytes, scrypt, timingSafeEqual } from 'node:crypto'
 import { promisify } from 'node:util'
 
+import { OPERATIONS } from '../common/constants/common.constants'
 import { USER_RECENT_TODOS_COUNT } from '../common/constants/user.constants'
 import {
   ConflictError,
@@ -14,6 +14,7 @@ import { TodosService } from '../todos/todos.service'
 import { CreateUserDto } from './dto/create-user.dto'
 import { UpdateUserDto } from './dto/update-user.dto'
 import { UserDatabaseService } from './user.database.service'
+import type { OperationType, QueryOptions } from '../common/types/common.types'
 import type { Todo } from '../todos/schemas/todos.schema'
 import type { User } from './schemas/user.schema'
 
@@ -29,20 +30,18 @@ export class UserService implements OnModuleInit {
   private readonly keyLength = 64
 
   onModuleInit() {
-    this.todosChangeStreamDatabaseService.addEventListener(
-      'create',
-      this.updateUserRecentTodos.bind(this),
-    )
+    const relatedTodoEvents: OperationType[] = [
+      OPERATIONS.INSERT,
+      OPERATIONS.UPDATE,
+      OPERATIONS.DELETE,
+    ]
 
-    this.todosChangeStreamDatabaseService.addEventListener(
-      'update',
-      this.updateUserRecentTodos.bind(this),
-    )
-
-    this.todosChangeStreamDatabaseService.addEventListener(
-      'delete',
-      this.updateUserRecentTodos.bind(this),
-    )
+    relatedTodoEvents.forEach((event) => {
+      this.todosChangeStreamDatabaseService.addEventListener(
+        event,
+        this.updateUserRecentTodos.bind(this),
+      )
+    })
   }
 
   private async hashPassword(password: string): Promise<string> {
@@ -59,21 +58,6 @@ export class UserService implements OnModuleInit {
     const hashKeyBuff = Buffer.from(hashKey, 'hex')
     const derivedKey = await scryptAsync(password, salt, this.keyLength)
     return timingSafeEqual(hashKeyBuff, derivedKey as Buffer)
-  }
-
-  async getUserByCredentials(
-    username: string,
-    password: string,
-  ): Promise<User> {
-    const user = await this.userDatabaseService.getUserByQuery({ username })
-
-    const isPasswordMatch = await this.comparePasswords(password, user.password)
-
-    if (!isPasswordMatch) {
-      throw new ValidationError('Wrong password')
-    }
-
-    return user
   }
 
   async isUserExistByUsername(username: string): Promise<boolean> {
@@ -107,6 +91,21 @@ export class UserService implements OnModuleInit {
 
   async getUserById(id: string): Promise<User> {
     return await this.userDatabaseService.getUserById(id)
+  }
+
+  async getUserByCredentials(
+    username: string,
+    password: string,
+  ): Promise<User> {
+    const user = await this.userDatabaseService.getUserByQuery({ username })
+
+    const isPasswordMatch = await this.comparePasswords(password, user.password)
+
+    if (!isPasswordMatch) {
+      throw new ValidationError('Wrong password')
+    }
+
+    return user
   }
 
   async getUserTodos(userId: string, options?: QueryOptions): Promise<Todo[]> {

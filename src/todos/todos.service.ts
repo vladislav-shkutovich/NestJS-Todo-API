@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common'
-import { QueryOptions } from 'mongoose'
 
 import { CreateTodoDto } from './dto/create-todo.dto'
 import { UpdateTodoDto } from './dto/update-todo.dto'
 import { TodosDatabaseService } from './todos.database.service'
 import type { Todo } from './schemas/todos.schema'
+import type { QueryOptions } from '../common/types/common.types'
 
 @Injectable()
 export class TodosService {
