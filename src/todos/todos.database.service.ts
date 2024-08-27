@@ -7,6 +7,7 @@ import { NotFoundError } from '../common/errors/errors'
 import { CreateTodoDto } from './dto/create-todo.dto'
 import { UpdateTodoDto } from './dto/update-todo.dto'
 import type { Todo } from './schemas/todos.schema'
+import type { QueryOptions } from '../common/types/common.types'
 
 @Injectable()
 export class TodosDatabaseService {
@@ -28,9 +29,11 @@ export class TodosDatabaseService {
     return allTodos.map((todo) => todo.toObject())
   }
 
-  // ? deferred TODO: - Add some filters (time range, for example) and sorts for todos by user endpoint;
-  async getAllTodosByUserId(userId: string): Promise<Todo[]> {
-    const todosByUser = await this.todoModel.find({ userId })
+  async getAllTodosByUserId(
+    userId: string,
+    options: QueryOptions = {},
+  ): Promise<Todo[]> {
+    const todosByUser = await this.todoModel.find({ userId }, null, options)
     return todosByUser.map((todo) => todo.toObject())
   }
 

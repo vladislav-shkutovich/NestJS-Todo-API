@@ -4,6 +4,7 @@ import { CreateTodoDto } from './dto/create-todo.dto'
 import { UpdateTodoDto } from './dto/update-todo.dto'
 import { TodosDatabaseService } from './todos.database.service'
 import type { Todo } from './schemas/todos.schema'
+import type { QueryOptions } from '../common/types/common.types'
 
 @Injectable()
 export class TodosService {
@@ -20,8 +21,11 @@ export class TodosService {
     return await this.todosDatabaseService.getAllTodos()
   }
 
-  async getAllTodosByUserId(userId: string): Promise<Todo[]> {
-    return await this.todosDatabaseService.getAllTodosByUserId(userId)
+  async getAllTodosByUserId(
+    userId: string,
+    options?: QueryOptions,
+  ): Promise<Todo[]> {
+    return await this.todosDatabaseService.getAllTodosByUserId(userId, options)
   }
 
   async getTodoById(id: string): Promise<Todo> {

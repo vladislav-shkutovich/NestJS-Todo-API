@@ -7,11 +7,13 @@ import {
   Param,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common'
 
 import { USERS_ROUTE } from '../common/constants/routing.constants'
 import { Public } from '../common/decorators/public.decorator'
 import { IdParamDto } from '../common/dto/id-param.dto'
+import { QueryParamsDto } from '../common/dto/query-params.dto'
 import { CreateUserDto } from './dto/create-user.dto'
 import { UpdateUserDto } from './dto/update-user.dto'
 import { UserService } from './user.service'
@@ -38,10 +40,12 @@ export class UserController {
     return await this.userService.getUserById(params.id)
   }
 
-  // ? To be discussed later how to handle this logic in multiple roles in the most convenient way
   @Get(':id/todos')
-  async getUserTodos(@Param() params: IdParamDto): Promise<Todo[]> {
-    return await this.userService.getUserTodos(params.id)
+  async getUserTodos(
+    @Param() params: IdParamDto,
+    @Query() query: QueryParamsDto,
+  ): Promise<Todo[]> {
+    return await this.userService.getUserTodos(params.id, query)
   }
 
   @Patch(':id')
