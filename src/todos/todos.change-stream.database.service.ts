@@ -1,88 +1,104 @@
 import { Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
 import { Model } from 'mongoose'
-import type { ChangeStreamDocument } from 'mongodb'
+import type {
+  ChangeStream,
+  ChangeStreamInsertDocument,
+  ChangeStreamUpdateDocument,
+  ChangeStreamDeleteDocument,
+} from 'mongodb'
 
-import { Operations } from '../common/constants/common.constants'
 import { TODO_MODEL, USER_MODEL } from '../common/constants/database.constants'
-import { ChangeStreamService } from '../common/services/change-stream.service'
-import type { OperationCallback } from '../common/types/common.types'
 import type { User } from '../user/schemas/user.schema'
 import type { Todo } from './schemas/todos.schema'
 
 @Injectable()
-export class TodosChangeStreamDatabaseService extends ChangeStreamService<Todo> {
-  private eventListeners = new Map<Operations, OperationCallback[]>(
-    Object.values(Operations).map((operation) => [operation, []]),
-  )
+export class TodosChangeStreamDatabaseService {
+  private changeStreamOnCreate?: ChangeStream
+  private changeStreamOnUpdate?: ChangeStream
+  private changeStreamOnDelete?: ChangeStream
 
   constructor(
     @InjectModel(TODO_MODEL) private readonly todoModel: Model<Todo>,
     @InjectModel(USER_MODEL) private readonly userModel: Model<User>,
-  ) {
-    super(todoModel, [
-      {
-        $match: {
-          operationType: {
-            $in: ['insert', 'update', 'delete'],
+  ) {}
+
+  subscribeOnTodoCreate(callback: (todo: Todo) => void): void {
+    if (!this.changeStreamOnCreate) {
+      this.changeStreamOnCreate = this.todoModel.watch([
+        {
+          $match: {
+            operationType: 'insert',
           },
         },
+      ])
+    }
+
+    this.changeStreamOnCreate.on(
+      'change',
+      async (changeStreamDoc: ChangeStreamInsertDocument) => {
+        const createdTodo = changeStreamDoc.fullDocument as Todo
+        callback(createdTodo)
       },
-    ])
+    )
   }
 
-  addEventListener(event: Operations, callback: OperationCallback) {
-    if (this.eventListeners.has(event)) {
-      this.eventListeners.get(event)!.push(callback)
-    } else this.eventListeners.set(event, [callback])
-  }
-
-  protected async handleChange(changeStreamDoc: ChangeStreamDocument) {
-    if (changeStreamDoc.operationType === 'insert') {
-      const createdTodo = changeStreamDoc.fullDocument as Todo
-      const insertCallbacks = this.eventListeners.get(Operations.INSERT)
-
-      if (insertCallbacks) {
-        insertCallbacks.forEach((callback) => {
-          callback(createdTodo.userId, createdTodo)
-        })
-      }
-    }
-
-    if (changeStreamDoc.operationType === 'update') {
-      // TODO: - Get fullDocument from update lookup instead of finding user in DB for its id;
-      const updatedTodo = await this.todoModel.findById(
-        changeStreamDoc.documentKey._id,
+  subscribeOnTodoUpdate(callback: (todo: Todo) => void): void {
+    if (!this.changeStreamOnUpdate) {
+      this.changeStreamOnUpdate = this.todoModel.watch(
+        [
+          {
+            $match: {
+              operationType: 'update',
+            },
+          },
+        ],
+        { fullDocument: 'updateLookup' },
       )
-      const updateCallbacks = this.eventListeners.get(Operations.UPDATE)
-
-      if (updatedTodo && updateCallbacks) {
-        updateCallbacks.forEach((callback) => {
-          callback(updatedTodo.userId, updatedTodo)
-        })
-      }
     }
 
-    if (changeStreamDoc.operationType === 'delete') {
-      const deletedTodoId = changeStreamDoc.documentKey._id
-      const deleteCallbacks = this.eventListeners.get(Operations.DELETE)
+    this.changeStreamOnUpdate.on(
+      'change',
+      async (changeStreamDoc: ChangeStreamUpdateDocument) => {
+        const updatedTodo = changeStreamDoc.fullDocument as Todo
+        callback(updatedTodo)
+      },
+    )
+  }
 
-      // TODO: - Get fullDocument from update lookup instead of finding user in DB for its id;
-      const user = await this.userModel.findOne({
-        'todos._id': deletedTodoId,
-      })
+  // TODO: - Get only todoId in subscribeOnTodoDelete and send it into new UserService method (without changes as it was before);
+  subscribeOnTodoDelete(callback: (todo: Todo) => void): void {
+    if (!this.changeStreamOnDelete) {
+      this.changeStreamOnDelete = this.todoModel.watch([
+        {
+          $match: {
+            operationType: 'delete',
+          },
+        },
+      ])
+    }
 
-      if (user) {
-        const isDeletedTodoInUser = user.todos.some((todo) =>
-          todo._id.equals(deletedTodoId),
+    this.changeStreamOnDelete.on(
+      'change',
+      async (changeStreamDoc: ChangeStreamDeleteDocument) => {
+        const deletedTodoId = changeStreamDoc.documentKey._id
+
+        const userWithDeletedTodo = await this.userModel.findOne(
+          {
+            'todos._id': deletedTodoId,
+          },
+          {
+            'todos.$': 1,
+          },
         )
 
-        if (isDeletedTodoInUser && deleteCallbacks) {
-          deleteCallbacks.forEach((callback) => {
-            callback(user._id.toString())
-          })
+        if (userWithDeletedTodo) {
+          callback(userWithDeletedTodo.todos[0])
         }
-      }
-    }
+      },
+    )
   }
+
+  // TODO: - Realize unsubscribe method in TodosChangeStreamDatabaseService;
+  async unsubscribe() {}
 }

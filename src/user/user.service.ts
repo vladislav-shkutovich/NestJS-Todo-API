@@ -2,7 +2,6 @@ import { Injectable, OnModuleInit } from '@nestjs/common'
 import { randomBytes, scrypt, timingSafeEqual } from 'node:crypto'
 import { promisify } from 'node:util'
 
-import { Operations } from '../common/constants/common.constants'
 import { USER_RECENT_TODOS_COUNT } from '../common/constants/user.constants'
 import {
   ConflictError,
@@ -30,18 +29,17 @@ export class UserService implements OnModuleInit {
   private readonly keyLength = 64
 
   onModuleInit() {
-    const relatedTodoEvents: Operations[] = [
-      Operations.INSERT,
-      Operations.UPDATE,
-      Operations.DELETE,
-    ]
+    this.todosChangeStreamDatabaseService.subscribeOnTodoCreate(
+      this.updateUserRecentTodos.bind(this),
+    )
 
-    relatedTodoEvents.forEach((event) => {
-      this.todosChangeStreamDatabaseService.addEventListener(
-        event,
-        this.updateUserRecentTodos.bind(this),
-      )
-    })
+    this.todosChangeStreamDatabaseService.subscribeOnTodoUpdate(
+      this.updateUserRecentTodos.bind(this),
+    )
+
+    this.todosChangeStreamDatabaseService.subscribeOnTodoDelete(
+      this.updateUserRecentTodos.bind(this),
+    )
   }
 
   private async hashPassword(password: string): Promise<string> {
@@ -128,31 +126,36 @@ export class UserService implements OnModuleInit {
     return await this.userDatabaseService.updateUser(id, updateParams)
   }
 
-  async updateUserRecentTodos(userId: string, newLatestTodo?: Todo) {
+  // TODO: - Return reduce into updateUserRecentTodos for create and update methods (to prevent redundant access to the DB);
+  async updateUserRecentTodos(todo: Todo) {
+    const userId = todo.userId.toString()
+
     const recentUserTodos = await this.getUserTodos(userId, {
       sort: { updatedAt: -1 },
       limit: USER_RECENT_TODOS_COUNT,
     })
 
-    const todosToUpdate = newLatestTodo
-      ? recentUserTodos.reduce(
-          (todos, todo) => {
-            if (
-              todos.length < USER_RECENT_TODOS_COUNT &&
-              !todo._id.equals(newLatestTodo._id)
-            ) {
-              todos.push(todo)
-            }
-            return todos
-          },
-          [newLatestTodo],
-        )
-      : recentUserTodos
-
     return await this.userDatabaseService.updateUser(userId, {
-      todos: todosToUpdate,
+      todos: recentUserTodos,
     })
   }
+
+  // TODO: - Add new UserService method for delete subscription;
+  /*
+  // todo -> todoId
+  async updateUserRecentTodos(todo: Todo) {
+    const userId = todo.userId.toString()
+
+    const recentUserTodos = await this.getUserTodos(userId, {
+      sort: { updatedAt: -1 },
+      limit: USER_RECENT_TODOS_COUNT,
+    })
+
+    return await this.userDatabaseService.updateUser(userId, {
+      todos: recentUserTodos,
+    })
+  }
+  */
 
   async deleteUser(id: string): Promise<void> {
     return await this.userDatabaseService.deleteUser(id)
