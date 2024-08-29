@@ -74,4 +74,9 @@ export class TodosDatabaseService {
       throw new NotFoundError(`Todo with id ${id} not found`)
     }
   }
+
+  // TODO: - Fix query types for `deleteTodosByQuery` in TodosDatabaseService method;
+  async deleteTodosByQuery(query: Record<string, any>) {
+    await this.todoModel.deleteMany(query)
+  }
 }

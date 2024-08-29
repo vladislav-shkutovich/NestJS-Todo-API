@@ -47,6 +47,7 @@ export class UserDatabaseService {
     return userById.toObject()
   }
 
+  // TODO: - Fix query types for `getUserByQuery` in UserDatabaseService method;
   async getUserByQuery(query: Record<string, any>): Promise<User> {
     const user = await this.userModel.findOne(query)
 

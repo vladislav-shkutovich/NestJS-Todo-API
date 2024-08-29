@@ -1,8 +1,8 @@
-import { Module } from '@nestjs/common'
+import { forwardRef, Module } from '@nestjs/common'
 import { MongooseModule } from '@nestjs/mongoose'
 
-import { TODO_MODEL, USER_MODEL } from '../common/constants/database.constants'
-import { UserSchema } from '../user/schemas/user.schema'
+import { TODO_MODEL } from '../common/constants/database.constants'
+import { UserModule } from '../user/user.module'
 import { TodoSchema } from './schemas/todos.schema'
 import { TodosChangeStreamDatabaseService } from './todos.change-stream.database.service'
 import { TodosController } from './todos.controller'
@@ -11,10 +11,8 @@ import { TodosService } from './todos.service'
 
 @Module({
   imports: [
-    MongooseModule.forFeature([
-      { name: TODO_MODEL, schema: TodoSchema },
-      { name: USER_MODEL, schema: UserSchema },
-    ]),
+    MongooseModule.forFeature([{ name: TODO_MODEL, schema: TodoSchema }]),
+    forwardRef(() => UserModule),
   ],
   providers: [
     TodosService,

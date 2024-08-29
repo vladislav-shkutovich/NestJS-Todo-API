@@ -1,14 +1,22 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, OnModuleInit } from '@nestjs/common'
 
 import { CreateTodoDto } from './dto/create-todo.dto'
 import { UpdateTodoDto } from './dto/update-todo.dto'
 import { TodosDatabaseService } from './todos.database.service'
+import { UserChangeStreamDatabaseService } from '../user/user.change-stream.database.service'
 import type { Todo } from './schemas/todos.schema'
 import type { QueryOptions } from '../common/types/common.types'
 
 @Injectable()
-export class TodosService {
-  constructor(private readonly todosDatabaseService: TodosDatabaseService) {}
+export class TodosService implements OnModuleInit {
+  constructor(
+    private readonly todosDatabaseService: TodosDatabaseService,
+    private readonly userChangeStreamDatabaseService: UserChangeStreamDatabaseService,
+  ) {}
+
+  onModuleInit() {
+    this.updateTodosOnUserDelete()
+  }
 
   async createTodo(
     createTodoDto: CreateTodoDto,
@@ -42,6 +50,14 @@ export class TodosService {
       userId,
       updateTodoDto,
     )
+  }
+
+  async updateTodosOnUserDelete() {
+    for await (const deletedUserId of this.userChangeStreamDatabaseService.subscribeOnUserDelete()) {
+      await this.todosDatabaseService.deleteTodosByQuery({
+        userId: deletedUserId.toString(),
+      })
+    }
   }
 
   async deleteTodo(id: string): Promise<void> {

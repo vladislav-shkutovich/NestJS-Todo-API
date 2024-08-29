@@ -1,33 +1,38 @@
 import { Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
 import { Model } from 'mongoose'
-import type { ChangeStreamDocument } from 'mongodb'
+import type { ChangeStream, ChangeStreamDeleteDocument } from 'mongodb'
 
-import { TODO_MODEL, USER_MODEL } from '../common/constants/database.constants'
-import { ChangeStreamService } from '../common/services/change-stream.service'
-import type { Todo } from '../todos/schemas/todos.schema'
+import { USER_MODEL } from '../common/constants/database.constants'
 import type { User } from './schemas/user.schema'
 
 @Injectable()
-export class UserChangeStreamDatabaseService extends ChangeStreamService<User> {
+export class UserChangeStreamDatabaseService {
+  private changeStreamOnDelete?: ChangeStream<
+    User,
+    ChangeStreamDeleteDocument<User>
+  >
+
   constructor(
-    @InjectModel(USER_MODEL) userModel: Model<User>,
-    @InjectModel(TODO_MODEL) private readonly todoModel: Model<Todo>,
-  ) {
-    super(userModel, [
-      {
-        $match: {
-          operationType: 'delete',
+    @InjectModel(USER_MODEL) private readonly userModel: Model<User>,
+  ) {}
+
+  async *subscribeOnUserDelete() {
+    if (!this.changeStreamOnDelete) {
+      this.changeStreamOnDelete = this.userModel.watch([
+        {
+          $match: {
+            operationType: 'delete',
+          },
         },
-      },
-    ])
-  }
-
-  protected async handleChange(changeStreamDoc: ChangeStreamDocument) {
-    if (changeStreamDoc.operationType === 'delete') {
-      const deletedUserId = changeStreamDoc.documentKey._id
-
-      await this.todoModel.deleteMany({ userId: deletedUserId.toString() })
+      ])
     }
+
+    for await (const changeStreamDoc of this.changeStreamOnDelete
+      .driverChangeStream) {
+      yield changeStreamDoc.documentKey._id
+    }
+
+    this.changeStreamOnDelete.close()
   }
 }
