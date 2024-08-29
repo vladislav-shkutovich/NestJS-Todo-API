@@ -27,7 +27,6 @@ export class UserChangeStreamDatabaseService extends ChangeStreamService<User> {
     if (changeStreamDoc.operationType === 'delete') {
       const deletedUserId = changeStreamDoc.documentKey._id
 
-      // ? ⬇️ Question: discuss on call with Zhenya `_id.toString()`, `new ObjectId("...")` and so on.
       await this.todoModel.deleteMany({ userId: deletedUserId.toString() })
     }
   }

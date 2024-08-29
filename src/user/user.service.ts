@@ -29,17 +29,9 @@ export class UserService implements OnModuleInit {
   private readonly keyLength = 64
 
   onModuleInit() {
-    this.todosChangeStreamDatabaseService.subscribeOnTodoCreate(
-      this.updateUserRecentTodos.bind(this),
-    )
-
-    this.todosChangeStreamDatabaseService.subscribeOnTodoUpdate(
-      this.updateUserRecentTodos.bind(this),
-    )
-
-    this.todosChangeStreamDatabaseService.subscribeOnTodoDelete(
-      this.updateUserRecentTodos.bind(this),
-    )
+    this.updateUserRecentTodosOnTodoCreate()
+    this.updateUserRecentTodosOnTodoUpdate()
+    this.updateUserRecentTodosOnTodoDelete()
   }
 
   private async hashPassword(password: string): Promise<string> {
@@ -126,36 +118,88 @@ export class UserService implements OnModuleInit {
     return await this.userDatabaseService.updateUser(id, updateParams)
   }
 
-  // TODO: - Return reduce into updateUserRecentTodos for create and update methods (to prevent redundant access to the DB);
-  async updateUserRecentTodos(todo: Todo) {
-    const userId = todo.userId.toString()
+  async updateUserRecentTodosOnTodoCreate() {
+    for await (const createdTodo of this.todosChangeStreamDatabaseService.subscribeOnTodoCreate()) {
+      // ? Question: access DB for deprecated user.todos by `getUserById` to update them manually, or access DB for user.todos directly by the `getUserTodos` using query params? In both approaches we access DB, so why not the second one? In both options we access for the same data.
 
-    const recentUserTodos = await this.getUserTodos(userId, {
-      sort: { updatedAt: -1 },
-      limit: USER_RECENT_TODOS_COUNT,
-    })
+      // Option 1:
+      const user = await this.getUserById(createdTodo.userId)
 
-    return await this.userDatabaseService.updateUser(userId, {
-      todos: recentUserTodos,
-    })
+      const recentUserTodos = user.todos.reduce(
+        (todos, todo) => {
+          if (todos.length < USER_RECENT_TODOS_COUNT) {
+            todos.push(todo)
+          }
+          return todos
+        },
+        [createdTodo],
+      )
+
+      await this.userDatabaseService.updateUser(createdTodo.userId, {
+        todos: recentUserTodos,
+      })
+
+      // Option 2:
+      /*
+      const userId = recentTodo.userId.toString()
+
+      const recentUserTodos = await this.getUserTodos(userId, {
+        sort: { updatedAt: -1 },
+        limit: USER_RECENT_TODOS_COUNT,
+      })
+  
+      return await this.userDatabaseService.updateUser(userId, {
+        todos: recentUserTodos,
+      })
+      */
+    }
   }
 
-  // TODO: - Add new UserService method for delete subscription;
-  /*
-  // todo -> todoId
-  async updateUserRecentTodos(todo: Todo) {
-    const userId = todo.userId.toString()
+  async updateUserRecentTodosOnTodoUpdate() {
+    for await (const updatedTodo of this.todosChangeStreamDatabaseService.subscribeOnTodoUpdate()) {
+      const user = await this.getUserById(updatedTodo.userId)
 
-    const recentUserTodos = await this.getUserTodos(userId, {
-      sort: { updatedAt: -1 },
-      limit: USER_RECENT_TODOS_COUNT,
-    })
+      const recentUserTodos = user.todos.reduce(
+        (todos, todo) => {
+          if (
+            todos.length < USER_RECENT_TODOS_COUNT &&
+            !todo._id.equals(updatedTodo._id)
+          ) {
+            todos.push(todo)
+          }
+          return todos
+        },
+        [updatedTodo],
+      )
 
-    return await this.userDatabaseService.updateUser(userId, {
-      todos: recentUserTodos,
-    })
+      await this.userDatabaseService.updateUser(updatedTodo.userId, {
+        todos: recentUserTodos,
+      })
+    }
   }
-  */
+
+  async updateUserRecentTodosOnTodoDelete() {
+    for await (const deletedTodoId of this.todosChangeStreamDatabaseService.subscribeOnTodoDelete()) {
+      try {
+        const userWithDeletedTodo =
+          await this.userDatabaseService.getUserByQuery({
+            'todos._id': deletedTodoId,
+          })
+        const userId = userWithDeletedTodo._id.toString()
+
+        const recentUserTodos = await this.getUserTodos(userId, {
+          sort: { updatedAt: -1 },
+          limit: USER_RECENT_TODOS_COUNT,
+        })
+
+        await this.userDatabaseService.updateUser(userId, {
+          todos: recentUserTodos,
+        })
+      } catch (error) {
+        console.error(error)
+      }
+    }
+  }
 
   async deleteUser(id: string): Promise<void> {
     return await this.userDatabaseService.deleteUser(id)
