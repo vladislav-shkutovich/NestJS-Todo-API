@@ -1,15 +1,18 @@
-import { Test, TestingModule } from '@nestjs/testing'
 import { DeepMocked, createMock } from '@golevelup/ts-jest'
+import { Test, TestingModule } from '@nestjs/testing'
 import { Types } from 'mongoose'
-import { TodosService } from './todos.service'
-import { TodosDatabaseService } from './todos.database.service'
+
+import { UserChangeStreamDatabaseService } from '../user/user.change-stream.database.service'
 import { CreateTodoDto } from './dto/create-todo.dto'
 import { UpdateTodoDto } from './dto/update-todo.dto'
-import { Todo } from './schemas/todos.schema'
+import { TodosDatabaseService } from './todos.database.service'
+import { TodosService } from './todos.service'
+import type { Todo } from './schemas/todos.schema'
 
 describe('TodosService', () => {
   let todosService: TodosService
   let todosDatabaseService: DeepMocked<TodosDatabaseService>
+  let _userChangeStreamDatabaseService: DeepMocked<UserChangeStreamDatabaseService>
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -19,12 +22,19 @@ describe('TodosService', () => {
           provide: TodosDatabaseService,
           useValue: createMock<TodosDatabaseService>(),
         },
+        {
+          provide: UserChangeStreamDatabaseService,
+          useValue: createMock<UserChangeStreamDatabaseService>(),
+        },
       ],
     }).compile()
 
     todosService = module.get<TodosService>(TodosService)
     todosDatabaseService =
       module.get<DeepMocked<TodosDatabaseService>>(TodosDatabaseService)
+    _userChangeStreamDatabaseService = module.get<
+      DeepMocked<UserChangeStreamDatabaseService>
+    >(UserChangeStreamDatabaseService)
   })
 
   afterEach(() => {
