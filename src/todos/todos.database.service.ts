@@ -75,8 +75,7 @@ export class TodosDatabaseService {
     }
   }
 
-  // TODO: - Fix query types for `deleteTodosByQuery` in TodosDatabaseService method;
-  async deleteTodosByQuery(query: Record<string, any>) {
+  async deleteTodosByQuery(query: Partial<Todo>) {
     await this.todoModel.deleteMany(query)
   }
 }
