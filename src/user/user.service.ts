@@ -87,7 +87,11 @@ export class UserService implements OnModuleInit {
     username: string,
     password: string,
   ): Promise<User> {
-    const user = await this.userDatabaseService.getUserByQuery({ username })
+    const user = await this.userDatabaseService.findUserByQuery({ username })
+
+    if (!user) {
+      throw new NotFoundError(`User with username ${username} not found`)
+    }
 
     const isPasswordMatch = await this.comparePasswords(password, user.password)
 
@@ -178,18 +182,14 @@ export class UserService implements OnModuleInit {
     }
   }
 
-  // TODO: - Fix a new founded bug with circular triggering between two change stream services;
-  // * delete Todo -> triggers the update User.todos (OK)
-  // ! delete User -> triggers the delete Todo[] by userId (OK) -> triggers the update User.todos (BUG)
-  // for the last case there are no User.todos once user was deleted, it should be fixed
   async updateUserRecentTodosOnTodoDelete() {
     for await (const deletedTodoId of this.todosChangeStreamDatabaseService.subscribeOnTodoDelete()) {
-      try {
-        const userWithDeletedTodo =
-          await this.userDatabaseService.getUserByQuery({
-            'todos._id': deletedTodoId,
-          })
-        const userId = userWithDeletedTodo._id.toString()
+      const user = await this.userDatabaseService.findUserByQuery({
+        'todos._id': deletedTodoId,
+      })
+
+      if (user) {
+        const userId = user._id.toString()
 
         // TODO: - Rework sorting for todos by user (related to many places where it used);
         const recentUserTodos = await this.getUserTodos(userId, {
@@ -200,8 +200,6 @@ export class UserService implements OnModuleInit {
         await this.userDatabaseService.updateUser(userId, {
           todos: recentUserTodos,
         })
-      } catch (error) {
-        console.error(error)
       }
     }
   }

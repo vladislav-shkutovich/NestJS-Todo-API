@@ -61,13 +61,15 @@ describe('UserService', () => {
     it('should throw ValidationError if wrong password provided', async () => {
       const enteredPassword = 'wrongpassword'
 
-      userDatabaseService.getUserByQuery = jest.fn().mockResolvedValue(mockUser)
+      userDatabaseService.findUserByQuery = jest
+        .fn()
+        .mockResolvedValue(mockUser)
       userService['comparePasswords'] = jest.fn().mockResolvedValue(false)
 
       await expect(
         userService.getUserByCredentials(mockUser.username, enteredPassword),
       ).rejects.toThrow(ValidationError)
-      expect(userDatabaseService.getUserByQuery).toHaveBeenCalledWith({
+      expect(userDatabaseService.findUserByQuery).toHaveBeenCalledWith({
         username: mockUser.username,
       })
       expect(userService['comparePasswords']).toHaveBeenCalledWith(
@@ -79,14 +81,16 @@ describe('UserService', () => {
     it('should return user if validation is successful', async () => {
       const enteredPassword = 'password'
 
-      userDatabaseService.getUserByQuery = jest.fn().mockResolvedValue(mockUser)
+      userDatabaseService.findUserByQuery = jest
+        .fn()
+        .mockResolvedValue(mockUser)
       userService['comparePasswords'] = jest.fn().mockResolvedValue(true)
       await userService.getUserByCredentials(mockUser.username, enteredPassword)
 
       await expect(
         userService.getUserByCredentials(mockUser.username, enteredPassword),
       ).resolves.toEqual(mockUser)
-      expect(userDatabaseService.getUserByQuery).toHaveBeenCalledWith({
+      expect(userDatabaseService.findUserByQuery).toHaveBeenCalledWith({
         username: mockUser.username,
       })
       expect(userService['comparePasswords']).toHaveBeenCalledWith(

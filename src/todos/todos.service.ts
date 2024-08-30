@@ -15,7 +15,7 @@ export class TodosService implements OnModuleInit {
   ) {}
 
   onModuleInit() {
-    this.updateTodosOnUserDelete()
+    this.deleteTodosOnUserDelete()
   }
 
   async createTodo(
@@ -52,15 +52,15 @@ export class TodosService implements OnModuleInit {
     )
   }
 
-  async updateTodosOnUserDelete() {
+  async deleteTodo(id: string): Promise<void> {
+    await this.todosDatabaseService.deleteTodo(id)
+  }
+
+  async deleteTodosOnUserDelete() {
     for await (const deletedUserId of this.userChangeStreamDatabaseService.subscribeOnUserDelete()) {
       await this.todosDatabaseService.deleteTodosByQuery({
         userId: deletedUserId.toString(),
       })
     }
-  }
-
-  async deleteTodo(id: string): Promise<void> {
-    await this.todosDatabaseService.deleteTodo(id)
   }
 }
