@@ -3,11 +3,11 @@ import { InjectModel } from '@nestjs/mongoose'
 import { Model, Types } from 'mongoose'
 
 import { TODO_MODEL } from '../common/constants/database.constants'
+import { QueryParamsDto } from '../common/dto/query-params.dto'
 import { NotFoundError } from '../common/errors/errors'
 import { CreateTodoDto } from './dto/create-todo.dto'
 import { UpdateTodoDto } from './dto/update-todo.dto'
 import type { Todo } from './schemas/todos.schema'
-import type { QueryOptions } from '../common/types/common.types'
 
 @Injectable()
 export class TodosDatabaseService {
@@ -33,7 +33,7 @@ export class TodosDatabaseService {
 
   async getAllTodosByUserId(
     userId: string,
-    options: QueryOptions = {},
+    options: QueryParamsDto<Todo> = {},
   ): Promise<Todo[]> {
     const todosByUser = await this.todoModel.find({ userId }, null, options)
     return todosByUser.map((todo) => todo.toObject())

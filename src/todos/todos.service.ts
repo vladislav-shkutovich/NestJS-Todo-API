@@ -1,11 +1,11 @@
 import { Injectable, OnModuleInit } from '@nestjs/common'
 
+import { QueryParamsDto } from '../common/dto/query-params.dto'
+import { UserChangeStreamDatabaseService } from '../user/user.change-stream.database.service'
 import { CreateTodoDto } from './dto/create-todo.dto'
 import { UpdateTodoDto } from './dto/update-todo.dto'
 import { TodosDatabaseService } from './todos.database.service'
-import { UserChangeStreamDatabaseService } from '../user/user.change-stream.database.service'
 import type { Todo } from './schemas/todos.schema'
-import type { QueryOptions } from '../common/types/common.types'
 
 @Injectable()
 export class TodosService implements OnModuleInit {
@@ -31,7 +31,7 @@ export class TodosService implements OnModuleInit {
 
   async getAllTodosByUserId(
     userId: string,
-    options?: QueryOptions,
+    options?: QueryParamsDto<Todo>,
   ): Promise<Todo[]> {
     return await this.todosDatabaseService.getAllTodosByUserId(userId, options)
   }

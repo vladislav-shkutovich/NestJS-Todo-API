@@ -3,6 +3,7 @@ import { randomBytes, scrypt, timingSafeEqual } from 'node:crypto'
 import { promisify } from 'node:util'
 
 import { USER_RECENT_TODOS_COUNT } from '../common/constants/user.constants'
+import { QueryParamsDto } from '../common/dto/query-params.dto'
 import {
   ConflictError,
   NotFoundError,
@@ -13,7 +14,6 @@ import { TodosService } from '../todos/todos.service'
 import { CreateUserDto } from './dto/create-user.dto'
 import { UpdateUserDto } from './dto/update-user.dto'
 import { UserDatabaseService } from './user.database.service'
-import type { QueryOptions } from '../common/types/common.types'
 import type { Todo } from '../todos/schemas/todos.schema'
 import type { User } from './schemas/user.schema'
 
@@ -102,7 +102,10 @@ export class UserService implements OnModuleInit {
     return user
   }
 
-  async getUserTodos(userId: string, options?: QueryOptions): Promise<Todo[]> {
+  async getUserTodos(
+    userId: string,
+    options?: QueryParamsDto<Todo>,
+  ): Promise<Todo[]> {
     const isUserExist = await this.isUserExistById(userId)
 
     if (!isUserExist) {
@@ -191,9 +194,8 @@ export class UserService implements OnModuleInit {
       if (user) {
         const userId = user._id.toString()
 
-        // TODO: - Rework sorting for todos by user (related to many places where it used);
         const recentUserTodos = await this.getUserTodos(userId, {
-          sort: { updatedAt: -1 },
+          sort: { updatedAt: 'desc' },
           limit: USER_RECENT_TODOS_COUNT,
         })
 
