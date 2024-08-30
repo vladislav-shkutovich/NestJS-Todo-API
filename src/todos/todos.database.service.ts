@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
-import { Model } from 'mongoose'
+import { Model, Types } from 'mongoose'
 
 import { TODO_MODEL } from '../common/constants/database.constants'
 import { NotFoundError } from '../common/errors/errors'
@@ -18,7 +18,9 @@ export class TodosDatabaseService {
     userId: string,
   ): Promise<Todo> {
     const createdTodo = await this.todoModel.create({
-      userId,
+      // ? Question: It's a temporal fix, but need to discuss a problem with so much conversions from string into ObjectId and back again. I left some paper notes about it, let's discuss it on the next call.
+      // ? This topic is also related to the IdParamDto discussion.
+      userId: new Types.ObjectId(userId),
       ...createTodoDto,
     })
     return createdTodo.toObject()
@@ -54,7 +56,7 @@ export class TodosDatabaseService {
   ): Promise<Todo> {
     const updatedTodo = await this.todoModel.findByIdAndUpdate(
       todoId,
-      { userId, ...updateTodoDto },
+      { userId: new Types.ObjectId(userId), ...updateTodoDto },
       {
         new: true,
       },
