@@ -178,6 +178,10 @@ export class UserService implements OnModuleInit {
     }
   }
 
+  // TODO: - Fix a new founded bug with circular triggering between two change stream services;
+  // * delete Todo -> triggers the update User.todos (OK)
+  // ! delete User -> triggers the delete Todo[] by userId (OK) -> triggers the update User.todos (BUG)
+  // for the last case there are no User.todos once user was deleted, it should be fixed
   async updateUserRecentTodosOnTodoDelete() {
     for await (const deletedTodoId of this.todosChangeStreamDatabaseService.subscribeOnTodoDelete()) {
       try {
@@ -187,6 +191,7 @@ export class UserService implements OnModuleInit {
           })
         const userId = userWithDeletedTodo._id.toString()
 
+        // TODO: - Rework sorting for todos by user (related to many places where it used);
         const recentUserTodos = await this.getUserTodos(userId, {
           sort: { updatedAt: -1 },
           limit: USER_RECENT_TODOS_COUNT,
