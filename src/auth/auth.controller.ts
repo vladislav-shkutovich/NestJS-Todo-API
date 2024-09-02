@@ -13,7 +13,9 @@ export class AuthController {
   @Public()
   @UseGuards(LocalAuthGuard)
   @Post(LOGIN_ROUTE)
-  async login(@Request() req: ExpressRequest) {
+  async login(@Request() req: ExpressRequest): Promise<{
+    access_token: string
+  }> {
     const accessToken = await this.authService.getAccessToken(req.user)
     return {
       access_token: accessToken,

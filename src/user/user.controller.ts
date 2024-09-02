@@ -43,7 +43,7 @@ export class UserController {
   @Get(':id/todos')
   async getUserTodos(
     @Param() params: IdParamDto,
-    @Query() query: QueryParamsDto,
+    @Query() query: QueryParamsDto<Todo>,
   ): Promise<Todo[]> {
     return await this.userService.getUserTodos(params.id, query)
   }

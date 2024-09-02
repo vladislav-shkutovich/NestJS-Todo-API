@@ -33,8 +33,8 @@ describe('TodosDatabaseService', () => {
   })
 
   describe('updateTodo()', () => {
-    const todoId = new Types.ObjectId().toString()
-    const userId = new Types.ObjectId().toString()
+    const todoId = new Types.ObjectId()
+    const userId = new Types.ObjectId()
     const updateParams: UpdateTodoDto = {
       title: 'Updated title',
       description: 'Updated description',
@@ -67,7 +67,11 @@ describe('TodosDatabaseService', () => {
     it('should throw NotFoundError if todo not found', async () => {
       mockTodoModel.findByIdAndUpdate.mockReturnValue(null)
       await expect(
-        todosDatabaseService.updateTodo('nonExistentId', userId, updateParams),
+        todosDatabaseService.updateTodo(
+          new Types.ObjectId(),
+          userId,
+          updateParams,
+        ),
       ).rejects.toThrow(NotFoundError)
     })
   })

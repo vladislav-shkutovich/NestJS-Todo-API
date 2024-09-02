@@ -10,7 +10,7 @@ import type {
 export class AuthService {
   constructor(private readonly jwtService: JwtService) {}
 
-  async getAccessToken(user: UserWithoutPassword) {
+  async getAccessToken(user: UserWithoutPassword): Promise<string> {
     const payload: UserJwtPayload = { ...user, sub: user._id }
     return this.jwtService.sign(payload)
   }

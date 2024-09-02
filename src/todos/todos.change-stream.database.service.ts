@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
-import { Model } from 'mongoose'
+import { Model, Types } from 'mongoose'
 import type {
   ChangeStream,
   ChangeStreamInsertDocument,
@@ -8,22 +8,29 @@ import type {
   ChangeStreamDeleteDocument,
 } from 'mongodb'
 
-import { TODO_MODEL, USER_MODEL } from '../common/constants/database.constants'
-import type { User } from '../user/schemas/user.schema'
+import { TODO_MODEL } from '../common/constants/database.constants'
 import type { Todo } from './schemas/todos.schema'
 
 @Injectable()
 export class TodosChangeStreamDatabaseService {
-  private changeStreamOnCreate?: ChangeStream
-  private changeStreamOnUpdate?: ChangeStream
-  private changeStreamOnDelete?: ChangeStream
+  private changeStreamOnCreate?: ChangeStream<
+    Todo,
+    ChangeStreamInsertDocument<Todo>
+  >
+  private changeStreamOnUpdate?: ChangeStream<
+    Todo,
+    ChangeStreamUpdateDocument<Todo>
+  >
+  private changeStreamOnDelete?: ChangeStream<
+    Todo,
+    ChangeStreamDeleteDocument<Todo>
+  >
 
   constructor(
     @InjectModel(TODO_MODEL) private readonly todoModel: Model<Todo>,
-    @InjectModel(USER_MODEL) private readonly userModel: Model<User>,
   ) {}
 
-  subscribeOnTodoCreate(callback: (todo: Todo) => void): void {
+  async *subscribeOnTodoCreate(): AsyncGenerator<Todo> {
     if (!this.changeStreamOnCreate) {
       this.changeStreamOnCreate = this.todoModel.watch([
         {
@@ -34,16 +41,15 @@ export class TodosChangeStreamDatabaseService {
       ])
     }
 
-    this.changeStreamOnCreate.on(
-      'change',
-      async (changeStreamDoc: ChangeStreamInsertDocument) => {
-        const createdTodo = changeStreamDoc.fullDocument as Todo
-        callback(createdTodo)
-      },
-    )
+    for await (const changeStreamDoc of this.changeStreamOnCreate
+      .driverChangeStream) {
+      yield changeStreamDoc.fullDocument
+    }
+
+    await this.changeStreamOnCreate.close()
   }
 
-  subscribeOnTodoUpdate(callback: (todo: Todo) => void): void {
+  async *subscribeOnTodoUpdate(): AsyncGenerator<Todo> {
     if (!this.changeStreamOnUpdate) {
       this.changeStreamOnUpdate = this.todoModel.watch(
         [
@@ -57,17 +63,15 @@ export class TodosChangeStreamDatabaseService {
       )
     }
 
-    this.changeStreamOnUpdate.on(
-      'change',
-      async (changeStreamDoc: ChangeStreamUpdateDocument) => {
-        const updatedTodo = changeStreamDoc.fullDocument as Todo
-        callback(updatedTodo)
-      },
-    )
+    for await (const changeStreamDoc of this.changeStreamOnUpdate
+      .driverChangeStream) {
+      yield changeStreamDoc.fullDocument!
+    }
+
+    await this.changeStreamOnUpdate.close()
   }
 
-  // TODO: - Get only todoId in subscribeOnTodoDelete and send it into new UserService method (without changes as it was before);
-  subscribeOnTodoDelete(callback: (todo: Todo) => void): void {
+  async *subscribeOnTodoDelete(): AsyncGenerator<Types.ObjectId> {
     if (!this.changeStreamOnDelete) {
       this.changeStreamOnDelete = this.todoModel.watch([
         {
@@ -78,27 +82,11 @@ export class TodosChangeStreamDatabaseService {
       ])
     }
 
-    this.changeStreamOnDelete.on(
-      'change',
-      async (changeStreamDoc: ChangeStreamDeleteDocument) => {
-        const deletedTodoId = changeStreamDoc.documentKey._id
+    for await (const changeStreamDoc of this.changeStreamOnDelete
+      .driverChangeStream) {
+      yield changeStreamDoc.documentKey._id
+    }
 
-        const userWithDeletedTodo = await this.userModel.findOne(
-          {
-            'todos._id': deletedTodoId,
-          },
-          {
-            'todos.$': 1,
-          },
-        )
-
-        if (userWithDeletedTodo) {
-          callback(userWithDeletedTodo.todos[0])
-        }
-      },
-    )
+    await this.changeStreamOnDelete.close()
   }
-
-  // TODO: - Realize unsubscribe method in TodosChangeStreamDatabaseService;
-  async unsubscribe() {}
 }

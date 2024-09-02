@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
-import { Model } from 'mongoose'
+import { Model, Types } from 'mongoose'
 
 import { USER_MODEL } from '../common/constants/database.constants'
 import { NotFoundError } from '../common/errors/errors'
@@ -20,7 +20,7 @@ export class UserDatabaseService {
     return !!user
   }
 
-  async isUserExistById(id: string): Promise<boolean> {
+  async isUserExistById(id: Types.ObjectId): Promise<boolean> {
     const userById = await this.userModel.findById(id, { _id: 1 })
     return !!userById
   }
@@ -32,49 +32,47 @@ export class UserDatabaseService {
   }
 
   async getAllUsers(): Promise<User[]> {
-    const allUsers = await this.userModel.find()
-
-    return allUsers.map((user) => user.toObject())
+    return await this.userModel.find().lean()
   }
 
-  async getUserById(id: string): Promise<User> {
-    const userById = await this.userModel.findById(id)
+  async getUserById(id: Types.ObjectId): Promise<User> {
+    const userById = await this.userModel.findById(id).lean()
 
     if (!userById) {
       throw new NotFoundError(`User with id ${id} not found`)
     }
 
-    return userById.toObject()
+    return userById
   }
 
-  async getUserByQuery(query: Record<string, any>): Promise<User> {
-    const user = await this.userModel.findOne(query)
+  async findUserByQuery(query: Record<string, any>): Promise<User | null> {
+    const user = await this.userModel.findOne(query).lean()
 
     if (!user) {
-      const queryKeys = Object.keys(query).join(', ')
-      throw new NotFoundError(`User not found by query: ${queryKeys}`)
+      return null
     }
 
-    return user.toObject()
+    return user
   }
 
-  async updateUser(id: string, updateUserDto: UpdateUserDto): Promise<User> {
-    const updatedUser = await this.userModel.findByIdAndUpdate(
-      id,
-      updateUserDto,
-      {
+  async updateUser(
+    id: Types.ObjectId,
+    updateUserDto: UpdateUserDto,
+  ): Promise<User> {
+    const updatedUser = await this.userModel
+      .findByIdAndUpdate(id, updateUserDto, {
         new: true,
-      },
-    )
+      })
+      .lean()
 
     if (!updatedUser) {
       throw new NotFoundError(`User with id ${id} not found`)
     }
 
-    return updatedUser.toObject()
+    return updatedUser
   }
 
-  async deleteUser(id: string): Promise<void> {
+  async deleteUser(id: Types.ObjectId): Promise<void> {
     const deletedUser = await this.userModel.findByIdAndDelete(id)
 
     if (!deletedUser) {

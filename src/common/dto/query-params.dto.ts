@@ -1,13 +1,25 @@
 import { Transform, Type } from 'class-transformer'
-import { IsOptional, IsNumber, IsObject } from 'class-validator'
+import { IsNumber, IsObject, IsOptional } from 'class-validator'
+import type { Todo } from '../../todos/schemas/todos.schema'
+import type { User } from '../../user/schemas/user.schema'
 
-export class QueryParamsDto {
+// TODO (deferred): - Improve Query params DTO vadilation (custom decorator);
+// URL query params usage example: ?sort=updatedAt:desc
+// Code query params usage example: sort: { updatedAt: 'desc' }
+export class QueryParamsDto<T extends User | Todo> {
   @IsOptional()
   @IsObject()
-  @Transform(({ value }) => (value ? JSON.parse(value) : undefined), {
-    toClassOnly: true,
-  })
-  sort?: Record<string, number>
+  @Transform(
+    ({ value }) => {
+      if (typeof value === 'string') {
+        const [key, order] = value.split(':')
+        return { [key]: order }
+      }
+      return value
+    },
+    { toClassOnly: true },
+  )
+  sort?: { [K in keyof T]?: 'asc' | 'desc' }
 
   @IsOptional()
   @IsNumber()

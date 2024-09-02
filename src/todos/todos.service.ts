@@ -1,10 +1,11 @@
 import { Injectable } from '@nestjs/common'
+import { Types } from 'mongoose'
 
+import { QueryParamsDto } from '../common/dto/query-params.dto'
 import { CreateTodoDto } from './dto/create-todo.dto'
 import { UpdateTodoDto } from './dto/update-todo.dto'
 import { TodosDatabaseService } from './todos.database.service'
 import type { Todo } from './schemas/todos.schema'
-import type { QueryOptions } from '../common/types/common.types'
 
 @Injectable()
 export class TodosService {
@@ -12,7 +13,7 @@ export class TodosService {
 
   async createTodo(
     createTodoDto: CreateTodoDto,
-    userId: string,
+    userId: Types.ObjectId,
   ): Promise<Todo> {
     return await this.todosDatabaseService.createTodo(createTodoDto, userId)
   }
@@ -22,19 +23,19 @@ export class TodosService {
   }
 
   async getAllTodosByUserId(
-    userId: string,
-    options?: QueryOptions,
+    userId: Types.ObjectId,
+    options?: QueryParamsDto<Todo>,
   ): Promise<Todo[]> {
     return await this.todosDatabaseService.getAllTodosByUserId(userId, options)
   }
 
-  async getTodoById(id: string): Promise<Todo> {
+  async getTodoById(id: Types.ObjectId): Promise<Todo> {
     return await this.todosDatabaseService.getTodoById(id)
   }
 
   async updateTodo(
-    todoId: string,
-    userId: string,
+    todoId: Types.ObjectId,
+    userId: Types.ObjectId,
     updateTodoDto: UpdateTodoDto,
   ): Promise<Todo> {
     return await this.todosDatabaseService.updateTodo(
@@ -44,7 +45,11 @@ export class TodosService {
     )
   }
 
-  async deleteTodo(id: string): Promise<void> {
+  async deleteTodo(id: Types.ObjectId): Promise<void> {
     await this.todosDatabaseService.deleteTodo(id)
+  }
+
+  async deleteTodosByQuery(query: Partial<Todo>) {
+    await this.todosDatabaseService.deleteTodosByQuery(query)
   }
 }

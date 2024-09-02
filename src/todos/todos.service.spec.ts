@@ -1,11 +1,12 @@
-import { Test, TestingModule } from '@nestjs/testing'
 import { DeepMocked, createMock } from '@golevelup/ts-jest'
+import { Test, TestingModule } from '@nestjs/testing'
 import { Types } from 'mongoose'
-import { TodosService } from './todos.service'
-import { TodosDatabaseService } from './todos.database.service'
+
 import { CreateTodoDto } from './dto/create-todo.dto'
 import { UpdateTodoDto } from './dto/update-todo.dto'
-import { Todo } from './schemas/todos.schema'
+import { TodosDatabaseService } from './todos.database.service'
+import { TodosService } from './todos.service'
+import type { Todo } from './schemas/todos.schema'
 
 describe('TodosService', () => {
   let todosService: TodosService
@@ -36,7 +37,7 @@ describe('TodosService', () => {
       title: 'Test title',
       description: 'Test description',
     }
-    const userId = new Types.ObjectId().toString()
+    const userId = new Types.ObjectId()
 
     it('should call method with correct arguments', async () => {
       await todosService.createTodo(enteredTodo, userId)
@@ -84,7 +85,7 @@ describe('TodosService', () => {
   })
 
   describe('getTodoById()', () => {
-    const id = new Types.ObjectId().toString()
+    const id = new Types.ObjectId()
 
     it('should call method with correct arguments', async () => {
       await todosService.getTodoById(id)
@@ -106,8 +107,8 @@ describe('TodosService', () => {
   })
 
   describe('updateTodo()', () => {
-    const todoId = new Types.ObjectId().toString()
-    const userId = new Types.ObjectId().toString()
+    const todoId = new Types.ObjectId()
+    const userId = new Types.ObjectId()
     const updateParams: UpdateTodoDto = {
       description: 'test updated description',
     }
@@ -139,7 +140,7 @@ describe('TodosService', () => {
 
   describe('deleteTodo()', () => {
     it('should call method with correct argument', async () => {
-      const id = new Types.ObjectId().toString()
+      const id = new Types.ObjectId()
       await todosService.deleteTodo(id)
       expect(todosDatabaseService.deleteTodo).toHaveBeenCalledWith(id)
     })

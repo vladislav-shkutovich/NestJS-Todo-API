@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
-import { Model } from 'mongoose'
+import { Model, Types } from 'mongoose'
 
 import { TODO_MODEL } from '../common/constants/database.constants'
+import { QueryParamsDto } from '../common/dto/query-params.dto'
 import { NotFoundError } from '../common/errors/errors'
 import { CreateTodoDto } from './dto/create-todo.dto'
 import { UpdateTodoDto } from './dto/update-todo.dto'
 import type { Todo } from './schemas/todos.schema'
-import type { QueryOptions } from '../common/types/common.types'
 
 @Injectable()
 export class TodosDatabaseService {
@@ -15,63 +15,67 @@ export class TodosDatabaseService {
 
   async createTodo(
     createTodoDto: CreateTodoDto,
-    userId: string,
+    userId: Types.ObjectId,
   ): Promise<Todo> {
     const createdTodo = await this.todoModel.create({
-      userId,
+      userId: new Types.ObjectId(userId),
       ...createTodoDto,
     })
     return createdTodo.toObject()
   }
 
   async getAllTodos(): Promise<Todo[]> {
-    const allTodos = await this.todoModel.find()
-    return allTodos.map((todo) => todo.toObject())
+    return await this.todoModel.find().lean()
   }
 
   async getAllTodosByUserId(
-    userId: string,
-    options: QueryOptions = {},
+    userId: Types.ObjectId,
+    options: QueryParamsDto<Todo> = {},
   ): Promise<Todo[]> {
-    const todosByUser = await this.todoModel.find({ userId }, null, options)
-    return todosByUser.map((todo) => todo.toObject())
+    return await this.todoModel.find({ userId }, null, options).lean()
   }
 
-  async getTodoById(id: string): Promise<Todo> {
-    const todoById = await this.todoModel.findById(id)
+  async getTodoById(id: Types.ObjectId): Promise<Todo> {
+    const todoById = await this.todoModel.findById(id).lean()
 
     if (!todoById) {
       throw new NotFoundError(`Todo with id ${id} not found`)
     }
 
-    return todoById.toObject()
+    return todoById
   }
 
   async updateTodo(
-    todoId: string,
-    userId: string,
+    todoId: Types.ObjectId,
+    userId: Types.ObjectId,
     updateTodoDto: UpdateTodoDto,
   ): Promise<Todo> {
-    const updatedTodo = await this.todoModel.findByIdAndUpdate(
-      todoId,
-      { userId, ...updateTodoDto },
-      {
-        new: true,
-      },
-    )
+    const updatedTodo = await this.todoModel
+      .findByIdAndUpdate(
+        todoId,
+        { userId: new Types.ObjectId(userId), ...updateTodoDto },
+        {
+          new: true,
+        },
+      )
+      .lean()
 
     if (!updatedTodo) {
       throw new NotFoundError(`Todo with id ${todoId} not found`)
     }
 
-    return updatedTodo.toObject()
+    return updatedTodo
   }
 
-  async deleteTodo(id: string): Promise<void> {
+  async deleteTodo(id: Types.ObjectId): Promise<void> {
     const deletedTodo = await this.todoModel.findByIdAndDelete(id)
 
     if (!deletedTodo) {
       throw new NotFoundError(`Todo with id ${id} not found`)
     }
+  }
+
+  async deleteTodosByQuery(query: Partial<Todo>) {
+    await this.todoModel.deleteMany(query)
   }
 }

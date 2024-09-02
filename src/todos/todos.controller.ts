@@ -27,10 +27,7 @@ export class TodosController {
     @Body() createTodoDto: CreateTodoDto,
     @Request() req: ExpressRequest,
   ): Promise<Todo> {
-    return await this.todosService.createTodo(
-      createTodoDto,
-      req.user._id.toString(),
-    )
+    return await this.todosService.createTodo(createTodoDto, req.user._id)
   }
 
   @Get()
@@ -51,7 +48,7 @@ export class TodosController {
   ): Promise<Todo> {
     return await this.todosService.updateTodo(
       params.id,
-      req.user._id.toString(),
+      req.user._id,
       updateTodoDto,
     )
   }

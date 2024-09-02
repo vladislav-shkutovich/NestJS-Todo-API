@@ -1,8 +1,10 @@
 import { Injectable, OnModuleInit } from '@nestjs/common'
 import { randomBytes, scrypt, timingSafeEqual } from 'node:crypto'
 import { promisify } from 'node:util'
+import { Types } from 'mongoose'
 
 import { USER_RECENT_TODOS_COUNT } from '../common/constants/user.constants'
+import { QueryParamsDto } from '../common/dto/query-params.dto'
 import {
   ConflictError,
   NotFoundError,
@@ -12,8 +14,8 @@ import { TodosChangeStreamDatabaseService } from '../todos/todos.change-stream.d
 import { TodosService } from '../todos/todos.service'
 import { CreateUserDto } from './dto/create-user.dto'
 import { UpdateUserDto } from './dto/update-user.dto'
+import { UserChangeStreamDatabaseService } from './user.change-stream.database.service'
 import { UserDatabaseService } from './user.database.service'
-import type { QueryOptions } from '../common/types/common.types'
 import type { Todo } from '../todos/schemas/todos.schema'
 import type { User } from './schemas/user.schema'
 
@@ -25,21 +27,16 @@ export class UserService implements OnModuleInit {
     private readonly userDatabaseService: UserDatabaseService,
     private readonly todosService: TodosService,
     private readonly todosChangeStreamDatabaseService: TodosChangeStreamDatabaseService,
+    private readonly userChangeStreamDatabaseService: UserChangeStreamDatabaseService,
   ) {}
   private readonly keyLength = 64
 
   onModuleInit() {
-    this.todosChangeStreamDatabaseService.subscribeOnTodoCreate(
-      this.updateUserRecentTodos.bind(this),
-    )
+    this.updateUserRecentTodosOnTodoCreate()
+    this.updateUserRecentTodosOnTodoUpdate()
+    this.updateUserRecentTodosOnTodoDelete()
 
-    this.todosChangeStreamDatabaseService.subscribeOnTodoUpdate(
-      this.updateUserRecentTodos.bind(this),
-    )
-
-    this.todosChangeStreamDatabaseService.subscribeOnTodoDelete(
-      this.updateUserRecentTodos.bind(this),
-    )
+    this.deleteTodosOnUserDelete()
   }
 
   private async hashPassword(password: string): Promise<string> {
@@ -62,7 +59,7 @@ export class UserService implements OnModuleInit {
     return await this.userDatabaseService.isUserExistByUsername(username)
   }
 
-  async isUserExistById(id: string): Promise<boolean> {
+  async isUserExistById(id: Types.ObjectId): Promise<boolean> {
     return await this.userDatabaseService.isUserExistById(id)
   }
 
@@ -87,7 +84,7 @@ export class UserService implements OnModuleInit {
     return await this.userDatabaseService.getAllUsers()
   }
 
-  async getUserById(id: string): Promise<User> {
+  async getUserById(id: Types.ObjectId): Promise<User> {
     return await this.userDatabaseService.getUserById(id)
   }
 
@@ -95,7 +92,11 @@ export class UserService implements OnModuleInit {
     username: string,
     password: string,
   ): Promise<User> {
-    const user = await this.userDatabaseService.getUserByQuery({ username })
+    const user = await this.userDatabaseService.findUserByQuery({ username })
+
+    if (!user) {
+      throw new NotFoundError(`User with username ${username} not found`)
+    }
 
     const isPasswordMatch = await this.comparePasswords(password, user.password)
 
@@ -106,7 +107,10 @@ export class UserService implements OnModuleInit {
     return user
   }
 
-  async getUserTodos(userId: string, options?: QueryOptions): Promise<Todo[]> {
+  async getUserTodos(
+    userId: Types.ObjectId,
+    options?: QueryParamsDto<Todo>,
+  ): Promise<Todo[]> {
     const isUserExist = await this.isUserExistById(userId)
 
     if (!isUserExist) {
@@ -116,7 +120,10 @@ export class UserService implements OnModuleInit {
     return await this.todosService.getAllTodosByUserId(userId, options)
   }
 
-  async updateUser(id: string, updateUserDto: UpdateUserDto): Promise<User> {
+  async updateUser(
+    id: Types.ObjectId,
+    updateUserDto: UpdateUserDto,
+  ): Promise<User> {
     const updateParams = { ...updateUserDto }
 
     if (updateUserDto.password) {
@@ -126,38 +133,79 @@ export class UserService implements OnModuleInit {
     return await this.userDatabaseService.updateUser(id, updateParams)
   }
 
-  // TODO: - Return reduce into updateUserRecentTodos for create and update methods (to prevent redundant access to the DB);
-  async updateUserRecentTodos(todo: Todo) {
-    const userId = todo.userId.toString()
+  async updateUserRecentTodosOnTodoCreate(): Promise<void> {
+    for await (const createdTodo of this.todosChangeStreamDatabaseService.subscribeOnTodoCreate()) {
+      const user = await this.getUserById(createdTodo.userId)
 
-    const recentUserTodos = await this.getUserTodos(userId, {
-      sort: { updatedAt: -1 },
-      limit: USER_RECENT_TODOS_COUNT,
-    })
+      const recentUserTodos = user.todos.reduce(
+        (todos, todo) => {
+          if (todos.length < USER_RECENT_TODOS_COUNT) {
+            todos.push(todo)
+          }
+          return todos
+        },
+        [createdTodo],
+      )
 
-    return await this.userDatabaseService.updateUser(userId, {
-      todos: recentUserTodos,
-    })
+      await this.userDatabaseService.updateUser(createdTodo.userId, {
+        todos: recentUserTodos,
+      })
+    }
   }
 
-  // TODO: - Add new UserService method for delete subscription;
-  /*
-  // todo -> todoId
-  async updateUserRecentTodos(todo: Todo) {
-    const userId = todo.userId.toString()
+  async updateUserRecentTodosOnTodoUpdate(): Promise<void> {
+    for await (const updatedTodo of this.todosChangeStreamDatabaseService.subscribeOnTodoUpdate()) {
+      const user = await this.getUserById(updatedTodo.userId)
 
-    const recentUserTodos = await this.getUserTodos(userId, {
-      sort: { updatedAt: -1 },
-      limit: USER_RECENT_TODOS_COUNT,
-    })
+      const recentUserTodos = user.todos.reduce(
+        (todos, todo) => {
+          if (
+            todos.length < USER_RECENT_TODOS_COUNT &&
+            !todo._id.equals(updatedTodo._id)
+          ) {
+            todos.push(todo)
+          }
+          return todos
+        },
+        [updatedTodo],
+      )
 
-    return await this.userDatabaseService.updateUser(userId, {
-      todos: recentUserTodos,
-    })
+      await this.userDatabaseService.updateUser(updatedTodo.userId, {
+        todos: recentUserTodos,
+      })
+    }
   }
-  */
 
-  async deleteUser(id: string): Promise<void> {
+  async updateUserRecentTodosOnTodoDelete(): Promise<void> {
+    for await (const deletedTodoId of this.todosChangeStreamDatabaseService.subscribeOnTodoDelete()) {
+      const user = await this.userDatabaseService.findUserByQuery({
+        'todos._id': deletedTodoId,
+      })
+
+      if (user) {
+        const userId = user._id
+
+        const recentUserTodos = await this.getUserTodos(userId, {
+          sort: { updatedAt: 'desc' },
+          limit: USER_RECENT_TODOS_COUNT,
+        })
+
+        await this.userDatabaseService.updateUser(userId, {
+          todos: recentUserTodos,
+        })
+      }
+    }
+  }
+
+  async deleteUser(id: Types.ObjectId): Promise<void> {
     return await this.userDatabaseService.deleteUser(id)
+  }
+
+  async deleteTodosOnUserDelete(): Promise<void> {
+    for await (const deletedUserId of this.userChangeStreamDatabaseService.subscribeOnUserDelete()) {
+      await this.todosService.deleteTodosByQuery({
+        userId: deletedUserId,
+      })
+    }
   }
 }

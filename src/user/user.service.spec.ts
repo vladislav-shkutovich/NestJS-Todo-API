@@ -11,12 +11,14 @@ import { UserDatabaseService } from './user.database.service'
 import { UserService } from './user.service'
 import type { Todo } from '../todos/schemas/todos.schema'
 import type { UpdateUserDto } from './dto/update-user.dto'
+import { UserChangeStreamDatabaseService } from './user.change-stream.database.service'
 
 describe('UserService', () => {
   let userService: UserService
   let userDatabaseService: DeepMocked<UserDatabaseService>
   let todosService: DeepMocked<TodosService>
   let _todosChangeStreamDatabaseService: DeepMocked<TodosChangeStreamDatabaseService>
+  let _userChangeStreamDatabaseService: DeepMocked<UserChangeStreamDatabaseService>
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -34,6 +36,10 @@ describe('UserService', () => {
           provide: TodosChangeStreamDatabaseService,
           useValue: createMock<TodosChangeStreamDatabaseService>(),
         },
+        {
+          provide: UserChangeStreamDatabaseService,
+          useValue: createMock<UserChangeStreamDatabaseService>(),
+        },
       ],
     }).compile()
 
@@ -44,6 +50,9 @@ describe('UserService', () => {
     _todosChangeStreamDatabaseService = module.get<
       DeepMocked<TodosChangeStreamDatabaseService>
     >(TodosChangeStreamDatabaseService)
+    _userChangeStreamDatabaseService = module.get<
+      DeepMocked<UserChangeStreamDatabaseService>
+    >(UserChangeStreamDatabaseService)
   })
 
   afterEach(() => {
@@ -61,13 +70,15 @@ describe('UserService', () => {
     it('should throw ValidationError if wrong password provided', async () => {
       const enteredPassword = 'wrongpassword'
 
-      userDatabaseService.getUserByQuery = jest.fn().mockResolvedValue(mockUser)
+      userDatabaseService.findUserByQuery = jest
+        .fn()
+        .mockResolvedValue(mockUser)
       userService['comparePasswords'] = jest.fn().mockResolvedValue(false)
 
       await expect(
         userService.getUserByCredentials(mockUser.username, enteredPassword),
       ).rejects.toThrow(ValidationError)
-      expect(userDatabaseService.getUserByQuery).toHaveBeenCalledWith({
+      expect(userDatabaseService.findUserByQuery).toHaveBeenCalledWith({
         username: mockUser.username,
       })
       expect(userService['comparePasswords']).toHaveBeenCalledWith(
@@ -79,14 +90,16 @@ describe('UserService', () => {
     it('should return user if validation is successful', async () => {
       const enteredPassword = 'password'
 
-      userDatabaseService.getUserByQuery = jest.fn().mockResolvedValue(mockUser)
+      userDatabaseService.findUserByQuery = jest
+        .fn()
+        .mockResolvedValue(mockUser)
       userService['comparePasswords'] = jest.fn().mockResolvedValue(true)
       await userService.getUserByCredentials(mockUser.username, enteredPassword)
 
       await expect(
         userService.getUserByCredentials(mockUser.username, enteredPassword),
       ).resolves.toEqual(mockUser)
-      expect(userDatabaseService.getUserByQuery).toHaveBeenCalledWith({
+      expect(userDatabaseService.findUserByQuery).toHaveBeenCalledWith({
         username: mockUser.username,
       })
       expect(userService['comparePasswords']).toHaveBeenCalledWith(
@@ -194,7 +207,7 @@ describe('UserService', () => {
   })
 
   describe('getUserTodos()', () => {
-    const userId = new Types.ObjectId().toString()
+    const userId = new Types.ObjectId()
     it('should call method with correct arguments', async () => {
       const queryOptions = {}
       await userService.getUserTodos(userId, queryOptions)
@@ -224,7 +237,7 @@ describe('UserService', () => {
   })
 
   describe('updateUser()', () => {
-    const id = new Types.ObjectId().toString()
+    const id = new Types.ObjectId()
     const updateParams: UpdateUserDto = {
       password: 'updatedpassword',
     }
@@ -262,7 +275,7 @@ describe('UserService', () => {
 
   describe('deleteUser()', () => {
     it('should call method with correct argument', async () => {
-      const id = new Types.ObjectId().toString()
+      const id = new Types.ObjectId()
 
       await userService.deleteUser(id)
 
