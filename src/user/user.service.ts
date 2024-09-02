@@ -14,6 +14,7 @@ import { TodosChangeStreamDatabaseService } from '../todos/todos.change-stream.d
 import { TodosService } from '../todos/todos.service'
 import { CreateUserDto } from './dto/create-user.dto'
 import { UpdateUserDto } from './dto/update-user.dto'
+import { UserChangeStreamDatabaseService } from './user.change-stream.database.service'
 import { UserDatabaseService } from './user.database.service'
 import type { Todo } from '../todos/schemas/todos.schema'
 import type { User } from './schemas/user.schema'
@@ -26,6 +27,7 @@ export class UserService implements OnModuleInit {
     private readonly userDatabaseService: UserDatabaseService,
     private readonly todosService: TodosService,
     private readonly todosChangeStreamDatabaseService: TodosChangeStreamDatabaseService,
+    private readonly userChangeStreamDatabaseService: UserChangeStreamDatabaseService,
   ) {}
   private readonly keyLength = 64
 
@@ -33,6 +35,8 @@ export class UserService implements OnModuleInit {
     this.updateUserRecentTodosOnTodoCreate()
     this.updateUserRecentTodosOnTodoUpdate()
     this.updateUserRecentTodosOnTodoDelete()
+
+    this.deleteTodosOnUserDelete()
   }
 
   private async hashPassword(password: string): Promise<string> {
@@ -195,5 +199,13 @@ export class UserService implements OnModuleInit {
 
   async deleteUser(id: Types.ObjectId): Promise<void> {
     return await this.userDatabaseService.deleteUser(id)
+  }
+
+  async deleteTodosOnUserDelete() {
+    for await (const deletedUserId of this.userChangeStreamDatabaseService.subscribeOnUserDelete()) {
+      await this.todosService.deleteTodosByQuery({
+        userId: deletedUserId,
+      })
+    }
   }
 }

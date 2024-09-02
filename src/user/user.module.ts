@@ -1,4 +1,4 @@
-import { forwardRef, Module } from '@nestjs/common'
+import { Module } from '@nestjs/common'
 import { MongooseModule } from '@nestjs/mongoose'
 
 import { USER_MODEL } from '../common/constants/database.constants'
@@ -12,7 +12,7 @@ import { UserService } from './user.service'
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: USER_MODEL, schema: UserSchema }]),
-    forwardRef(() => TodosModule),
+    TodosModule,
   ],
   providers: [
     UserService,
