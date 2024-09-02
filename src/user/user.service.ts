@@ -1,6 +1,7 @@
 import { Injectable, OnModuleInit } from '@nestjs/common'
 import { randomBytes, scrypt, timingSafeEqual } from 'node:crypto'
 import { promisify } from 'node:util'
+import { Types } from 'mongoose'
 
 import { USER_RECENT_TODOS_COUNT } from '../common/constants/user.constants'
 import { QueryParamsDto } from '../common/dto/query-params.dto'
@@ -54,7 +55,7 @@ export class UserService implements OnModuleInit {
     return await this.userDatabaseService.isUserExistByUsername(username)
   }
 
-  async isUserExistById(id: string): Promise<boolean> {
+  async isUserExistById(id: Types.ObjectId): Promise<boolean> {
     return await this.userDatabaseService.isUserExistById(id)
   }
 
@@ -79,7 +80,7 @@ export class UserService implements OnModuleInit {
     return await this.userDatabaseService.getAllUsers()
   }
 
-  async getUserById(id: string): Promise<User> {
+  async getUserById(id: Types.ObjectId): Promise<User> {
     return await this.userDatabaseService.getUserById(id)
   }
 
@@ -103,7 +104,7 @@ export class UserService implements OnModuleInit {
   }
 
   async getUserTodos(
-    userId: string,
+    userId: Types.ObjectId,
     options?: QueryParamsDto<Todo>,
   ): Promise<Todo[]> {
     const isUserExist = await this.isUserExistById(userId)
@@ -115,7 +116,10 @@ export class UserService implements OnModuleInit {
     return await this.todosService.getAllTodosByUserId(userId, options)
   }
 
-  async updateUser(id: string, updateUserDto: UpdateUserDto): Promise<User> {
+  async updateUser(
+    id: Types.ObjectId,
+    updateUserDto: UpdateUserDto,
+  ): Promise<User> {
     const updateParams = { ...updateUserDto }
 
     if (updateUserDto.password) {
@@ -127,9 +131,6 @@ export class UserService implements OnModuleInit {
 
   async updateUserRecentTodosOnTodoCreate() {
     for await (const createdTodo of this.todosChangeStreamDatabaseService.subscribeOnTodoCreate()) {
-      // ? Question: access DB for deprecated user.todos by `getUserById` to update them manually, or access DB for user.todos directly by the `getUserTodos` using query params? In both approaches we access DB, so why not the second one? In both options we access for the same data.
-
-      // Option 1:
       const user = await this.getUserById(createdTodo.userId)
 
       const recentUserTodos = user.todos.reduce(
@@ -145,20 +146,6 @@ export class UserService implements OnModuleInit {
       await this.userDatabaseService.updateUser(createdTodo.userId, {
         todos: recentUserTodos,
       })
-
-      // Option 2:
-      /*
-      const userId = recentTodo.userId.toString()
-
-      const recentUserTodos = await this.getUserTodos(userId, {
-        sort: { updatedAt: -1 },
-        limit: USER_RECENT_TODOS_COUNT,
-      })
-  
-      return await this.userDatabaseService.updateUser(userId, {
-        todos: recentUserTodos,
-      })
-      */
     }
   }
 
@@ -192,7 +179,7 @@ export class UserService implements OnModuleInit {
       })
 
       if (user) {
-        const userId = user._id.toString()
+        const userId = user._id
 
         const recentUserTodos = await this.getUserTodos(userId, {
           sort: { updatedAt: 'desc' },
@@ -206,7 +193,7 @@ export class UserService implements OnModuleInit {
     }
   }
 
-  async deleteUser(id: string): Promise<void> {
+  async deleteUser(id: Types.ObjectId): Promise<void> {
     return await this.userDatabaseService.deleteUser(id)
   }
 }

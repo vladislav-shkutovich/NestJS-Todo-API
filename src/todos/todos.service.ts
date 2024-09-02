@@ -1,4 +1,5 @@
 import { Injectable, OnModuleInit } from '@nestjs/common'
+import { Types } from 'mongoose'
 
 import { QueryParamsDto } from '../common/dto/query-params.dto'
 import { UserChangeStreamDatabaseService } from '../user/user.change-stream.database.service'
@@ -20,7 +21,7 @@ export class TodosService implements OnModuleInit {
 
   async createTodo(
     createTodoDto: CreateTodoDto,
-    userId: string,
+    userId: Types.ObjectId,
   ): Promise<Todo> {
     return await this.todosDatabaseService.createTodo(createTodoDto, userId)
   }
@@ -30,19 +31,19 @@ export class TodosService implements OnModuleInit {
   }
 
   async getAllTodosByUserId(
-    userId: string,
+    userId: Types.ObjectId,
     options?: QueryParamsDto<Todo>,
   ): Promise<Todo[]> {
     return await this.todosDatabaseService.getAllTodosByUserId(userId, options)
   }
 
-  async getTodoById(id: string): Promise<Todo> {
+  async getTodoById(id: Types.ObjectId): Promise<Todo> {
     return await this.todosDatabaseService.getTodoById(id)
   }
 
   async updateTodo(
-    todoId: string,
-    userId: string,
+    todoId: Types.ObjectId,
+    userId: Types.ObjectId,
     updateTodoDto: UpdateTodoDto,
   ): Promise<Todo> {
     return await this.todosDatabaseService.updateTodo(
@@ -52,14 +53,16 @@ export class TodosService implements OnModuleInit {
     )
   }
 
-  async deleteTodo(id: string): Promise<void> {
+  async deleteTodo(id: Types.ObjectId): Promise<void> {
     await this.todosDatabaseService.deleteTodo(id)
   }
 
+  // TODO: - Change User-Todos modules architecture to prevent circular depencencies;
+  // ! перенести это в юзерсервис, чтобы не было цикличной зависимости
   async deleteTodosOnUserDelete() {
     for await (const deletedUserId of this.userChangeStreamDatabaseService.subscribeOnUserDelete()) {
       await this.todosDatabaseService.deleteTodosByQuery({
-        userId: deletedUserId.toString(),
+        userId: deletedUserId,
       })
     }
   }

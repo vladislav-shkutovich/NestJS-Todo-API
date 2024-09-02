@@ -3,6 +3,7 @@ import { IsNumber, IsObject, IsOptional } from 'class-validator'
 import type { Todo } from '../../todos/schemas/todos.schema'
 import type { User } from '../../user/schemas/user.schema'
 
+// TODO (deferred): - Improve Query params DTO vadilation (custom decorator);
 // URL query params usage example: ?sort=updatedAt:desc
 // Code query params usage example: sort: { updatedAt: 'desc' }
 export class QueryParamsDto<T extends User | Todo> {

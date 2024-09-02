@@ -15,11 +15,9 @@ export class TodosDatabaseService {
 
   async createTodo(
     createTodoDto: CreateTodoDto,
-    userId: string,
+    userId: Types.ObjectId,
   ): Promise<Todo> {
     const createdTodo = await this.todoModel.create({
-      // ? Question: It's a temporal fix, but need to discuss a problem with so much conversions from string into ObjectId and back again. I left some paper notes about it, let's discuss it on the next call.
-      // ? This topic is also related to the IdParamDto discussion.
       userId: new Types.ObjectId(userId),
       ...createTodoDto,
     })
@@ -27,19 +25,21 @@ export class TodosDatabaseService {
   }
 
   async getAllTodos(): Promise<Todo[]> {
+    // TODO: - Read about `lean()` method for DB queries and replace `toObject()` method on it;
+    // const allTodos = await this.todoModel.find().lean()
     const allTodos = await this.todoModel.find()
     return allTodos.map((todo) => todo.toObject())
   }
 
   async getAllTodosByUserId(
-    userId: string,
+    userId: Types.ObjectId,
     options: QueryParamsDto<Todo> = {},
   ): Promise<Todo[]> {
     const todosByUser = await this.todoModel.find({ userId }, null, options)
     return todosByUser.map((todo) => todo.toObject())
   }
 
-  async getTodoById(id: string): Promise<Todo> {
+  async getTodoById(id: Types.ObjectId): Promise<Todo> {
     const todoById = await this.todoModel.findById(id)
 
     if (!todoById) {
@@ -50,8 +50,8 @@ export class TodosDatabaseService {
   }
 
   async updateTodo(
-    todoId: string,
-    userId: string,
+    todoId: Types.ObjectId,
+    userId: Types.ObjectId,
     updateTodoDto: UpdateTodoDto,
   ): Promise<Todo> {
     const updatedTodo = await this.todoModel.findByIdAndUpdate(
@@ -69,7 +69,7 @@ export class TodosDatabaseService {
     return updatedTodo.toObject()
   }
 
-  async deleteTodo(id: string): Promise<void> {
+  async deleteTodo(id: Types.ObjectId): Promise<void> {
     const deletedTodo = await this.todoModel.findByIdAndDelete(id)
 
     if (!deletedTodo) {

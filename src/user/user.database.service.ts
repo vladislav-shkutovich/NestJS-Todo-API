@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
-import { Model } from 'mongoose'
+import { Model, Types } from 'mongoose'
 
 import { USER_MODEL } from '../common/constants/database.constants'
 import { NotFoundError } from '../common/errors/errors'
@@ -20,7 +20,7 @@ export class UserDatabaseService {
     return !!user
   }
 
-  async isUserExistById(id: string): Promise<boolean> {
+  async isUserExistById(id: Types.ObjectId): Promise<boolean> {
     const userById = await this.userModel.findById(id, { _id: 1 })
     return !!userById
   }
@@ -37,7 +37,7 @@ export class UserDatabaseService {
     return allUsers.map((user) => user.toObject())
   }
 
-  async getUserById(id: string): Promise<User> {
+  async getUserById(id: Types.ObjectId): Promise<User> {
     const userById = await this.userModel.findById(id)
 
     if (!userById) {
@@ -57,7 +57,10 @@ export class UserDatabaseService {
     return user.toObject()
   }
 
-  async updateUser(id: string, updateUserDto: UpdateUserDto): Promise<User> {
+  async updateUser(
+    id: Types.ObjectId,
+    updateUserDto: UpdateUserDto,
+  ): Promise<User> {
     const updatedUser = await this.userModel.findByIdAndUpdate(
       id,
       updateUserDto,
@@ -73,7 +76,7 @@ export class UserDatabaseService {
     return updatedUser.toObject()
   }
 
-  async deleteUser(id: string): Promise<void> {
+  async deleteUser(id: Types.ObjectId): Promise<void> {
     const deletedUser = await this.userModel.findByIdAndDelete(id)
 
     if (!deletedUser) {

@@ -49,7 +49,8 @@ export class TodosChangeStreamDatabaseService {
     this.changeStreamOnCreate.close()
   }
 
-  async *subscribeOnTodoUpdate() {
+  // TODO: - Add return types to the all methods and functions in application;
+  async *subscribeOnTodoUpdate(): AsyncGenerator<Todo> {
     if (!this.changeStreamOnUpdate) {
       this.changeStreamOnUpdate = this.todoModel.watch(
         [
@@ -65,7 +66,7 @@ export class TodosChangeStreamDatabaseService {
 
     for await (const changeStreamDoc of this.changeStreamOnUpdate
       .driverChangeStream) {
-      yield changeStreamDoc.fullDocument
+      yield changeStreamDoc.fullDocument!
     }
 
     this.changeStreamOnUpdate.close()
