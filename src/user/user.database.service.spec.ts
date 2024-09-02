@@ -32,7 +32,7 @@ describe('UserDatabaseService', () => {
   })
 
   describe('updateUser()', () => {
-    const id = new Types.ObjectId().toString()
+    const id = new Types.ObjectId()
     const updateParams: UpdateUserDto = {
       username: 'username',
       password: 'password',
@@ -67,7 +67,7 @@ describe('UserDatabaseService', () => {
       mockUserModel.findByIdAndUpdate.mockReturnValue(null)
 
       await expect(
-        userDatabaseService.updateUser('nonExistentId', updateParams),
+        userDatabaseService.updateUser(new Types.ObjectId(), updateParams),
       ).rejects.toThrow(NotFoundError)
     })
   })

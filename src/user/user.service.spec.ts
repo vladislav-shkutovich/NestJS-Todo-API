@@ -198,7 +198,7 @@ describe('UserService', () => {
   })
 
   describe('getUserTodos()', () => {
-    const userId = new Types.ObjectId().toString()
+    const userId = new Types.ObjectId()
     it('should call method with correct arguments', async () => {
       const queryOptions = {}
       await userService.getUserTodos(userId, queryOptions)
@@ -228,7 +228,7 @@ describe('UserService', () => {
   })
 
   describe('updateUser()', () => {
-    const id = new Types.ObjectId().toString()
+    const id = new Types.ObjectId()
     const updateParams: UpdateUserDto = {
       password: 'updatedpassword',
     }
@@ -266,7 +266,7 @@ describe('UserService', () => {
 
   describe('deleteUser()', () => {
     it('should call method with correct argument', async () => {
-      const id = new Types.ObjectId().toString()
+      const id = new Types.ObjectId()
 
       await userService.deleteUser(id)
 
