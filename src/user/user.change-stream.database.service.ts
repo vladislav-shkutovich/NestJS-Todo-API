@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
-import { Model } from 'mongoose'
+import { Model, Types } from 'mongoose'
 import type { ChangeStream, ChangeStreamDeleteDocument } from 'mongodb'
 
 import { USER_MODEL } from '../common/constants/database.constants'
@@ -17,7 +17,7 @@ export class UserChangeStreamDatabaseService {
     @InjectModel(USER_MODEL) private readonly userModel: Model<User>,
   ) {}
 
-  async *subscribeOnUserDelete() {
+  async *subscribeOnUserDelete(): AsyncGenerator<Types.ObjectId> {
     if (!this.changeStreamOnDelete) {
       this.changeStreamOnDelete = this.userModel.watch([
         {

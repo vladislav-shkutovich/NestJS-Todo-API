@@ -133,7 +133,7 @@ export class UserService implements OnModuleInit {
     return await this.userDatabaseService.updateUser(id, updateParams)
   }
 
-  async updateUserRecentTodosOnTodoCreate() {
+  async updateUserRecentTodosOnTodoCreate(): Promise<void> {
     for await (const createdTodo of this.todosChangeStreamDatabaseService.subscribeOnTodoCreate()) {
       const user = await this.getUserById(createdTodo.userId)
 
@@ -153,7 +153,7 @@ export class UserService implements OnModuleInit {
     }
   }
 
-  async updateUserRecentTodosOnTodoUpdate() {
+  async updateUserRecentTodosOnTodoUpdate(): Promise<void> {
     for await (const updatedTodo of this.todosChangeStreamDatabaseService.subscribeOnTodoUpdate()) {
       const user = await this.getUserById(updatedTodo.userId)
 
@@ -176,7 +176,7 @@ export class UserService implements OnModuleInit {
     }
   }
 
-  async updateUserRecentTodosOnTodoDelete() {
+  async updateUserRecentTodosOnTodoDelete(): Promise<void> {
     for await (const deletedTodoId of this.todosChangeStreamDatabaseService.subscribeOnTodoDelete()) {
       const user = await this.userDatabaseService.findUserByQuery({
         'todos._id': deletedTodoId,
@@ -201,7 +201,7 @@ export class UserService implements OnModuleInit {
     return await this.userDatabaseService.deleteUser(id)
   }
 
-  async deleteTodosOnUserDelete() {
+  async deleteTodosOnUserDelete(): Promise<void> {
     for await (const deletedUserId of this.userChangeStreamDatabaseService.subscribeOnUserDelete()) {
       await this.todosService.deleteTodosByQuery({
         userId: deletedUserId,

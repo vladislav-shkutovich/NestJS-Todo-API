@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
-import { Model } from 'mongoose'
+import { Model, Types } from 'mongoose'
 import type {
   ChangeStream,
   ChangeStreamInsertDocument,
@@ -30,7 +30,7 @@ export class TodosChangeStreamDatabaseService {
     @InjectModel(TODO_MODEL) private readonly todoModel: Model<Todo>,
   ) {}
 
-  async *subscribeOnTodoCreate() {
+  async *subscribeOnTodoCreate(): AsyncGenerator<Todo> {
     if (!this.changeStreamOnCreate) {
       this.changeStreamOnCreate = this.todoModel.watch([
         {
@@ -49,7 +49,6 @@ export class TodosChangeStreamDatabaseService {
     this.changeStreamOnCreate.close()
   }
 
-  // TODO: - Add return types to the all methods and functions in application;
   async *subscribeOnTodoUpdate(): AsyncGenerator<Todo> {
     if (!this.changeStreamOnUpdate) {
       this.changeStreamOnUpdate = this.todoModel.watch(
@@ -72,7 +71,7 @@ export class TodosChangeStreamDatabaseService {
     this.changeStreamOnUpdate.close()
   }
 
-  async *subscribeOnTodoDelete() {
+  async *subscribeOnTodoDelete(): AsyncGenerator<Types.ObjectId> {
     if (!this.changeStreamOnDelete) {
       this.changeStreamOnDelete = this.todoModel.watch([
         {
