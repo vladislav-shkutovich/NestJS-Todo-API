@@ -46,7 +46,7 @@ export class TodosChangeStreamDatabaseService {
       yield changeStreamDoc.fullDocument
     }
 
-    this.changeStreamOnCreate.close()
+    await this.changeStreamOnCreate.close()
   }
 
   async *subscribeOnTodoUpdate(): AsyncGenerator<Todo> {
@@ -68,7 +68,7 @@ export class TodosChangeStreamDatabaseService {
       yield changeStreamDoc.fullDocument!
     }
 
-    this.changeStreamOnUpdate.close()
+    await this.changeStreamOnUpdate.close()
   }
 
   async *subscribeOnTodoDelete(): AsyncGenerator<Types.ObjectId> {
@@ -87,6 +87,6 @@ export class TodosChangeStreamDatabaseService {
       yield changeStreamDoc.documentKey._id
     }
 
-    this.changeStreamOnDelete.close()
+    await this.changeStreamOnDelete.close()
   }
 }

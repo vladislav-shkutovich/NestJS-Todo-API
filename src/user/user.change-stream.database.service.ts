@@ -33,6 +33,6 @@ export class UserChangeStreamDatabaseService {
       yield changeStreamDoc.documentKey._id
     }
 
-    this.changeStreamOnDelete.close()
+    await this.changeStreamOnDelete.close()
   }
 }
