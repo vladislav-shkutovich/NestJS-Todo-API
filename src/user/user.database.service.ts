@@ -32,48 +32,44 @@ export class UserDatabaseService {
   }
 
   async getAllUsers(): Promise<User[]> {
-    const allUsers = await this.userModel.find()
-
-    return allUsers.map((user) => user.toObject())
+    return await this.userModel.find().lean()
   }
 
   async getUserById(id: Types.ObjectId): Promise<User> {
-    const userById = await this.userModel.findById(id)
+    const userById = await this.userModel.findById(id).lean()
 
     if (!userById) {
       throw new NotFoundError(`User with id ${id} not found`)
     }
 
-    return userById.toObject()
+    return userById
   }
 
   async findUserByQuery(query: Record<string, any>): Promise<User | null> {
-    const user = await this.userModel.findOne(query)
+    const user = await this.userModel.findOne(query).lean()
 
     if (!user) {
       return null
     }
 
-    return user.toObject()
+    return user
   }
 
   async updateUser(
     id: Types.ObjectId,
     updateUserDto: UpdateUserDto,
   ): Promise<User> {
-    const updatedUser = await this.userModel.findByIdAndUpdate(
-      id,
-      updateUserDto,
-      {
+    const updatedUser = await this.userModel
+      .findByIdAndUpdate(id, updateUserDto, {
         new: true,
-      },
-    )
+      })
+      .lean()
 
     if (!updatedUser) {
       throw new NotFoundError(`User with id ${id} not found`)
     }
 
-    return updatedUser.toObject()
+    return updatedUser
   }
 
   async deleteUser(id: Types.ObjectId): Promise<void> {

@@ -25,28 +25,24 @@ export class TodosDatabaseService {
   }
 
   async getAllTodos(): Promise<Todo[]> {
-    // TODO: - Read about `lean()` method for DB queries and replace `toObject()` method on it;
-    // const allTodos = await this.todoModel.find().lean()
-    const allTodos = await this.todoModel.find()
-    return allTodos.map((todo) => todo.toObject())
+    return await this.todoModel.find().lean()
   }
 
   async getAllTodosByUserId(
     userId: Types.ObjectId,
     options: QueryParamsDto<Todo> = {},
   ): Promise<Todo[]> {
-    const todosByUser = await this.todoModel.find({ userId }, null, options)
-    return todosByUser.map((todo) => todo.toObject())
+    return await this.todoModel.find({ userId }, null, options).lean()
   }
 
   async getTodoById(id: Types.ObjectId): Promise<Todo> {
-    const todoById = await this.todoModel.findById(id)
+    const todoById = await this.todoModel.findById(id).lean()
 
     if (!todoById) {
       throw new NotFoundError(`Todo with id ${id} not found`)
     }
 
-    return todoById.toObject()
+    return todoById
   }
 
   async updateTodo(
@@ -54,19 +50,21 @@ export class TodosDatabaseService {
     userId: Types.ObjectId,
     updateTodoDto: UpdateTodoDto,
   ): Promise<Todo> {
-    const updatedTodo = await this.todoModel.findByIdAndUpdate(
-      todoId,
-      { userId: new Types.ObjectId(userId), ...updateTodoDto },
-      {
-        new: true,
-      },
-    )
+    const updatedTodo = await this.todoModel
+      .findByIdAndUpdate(
+        todoId,
+        { userId: new Types.ObjectId(userId), ...updateTodoDto },
+        {
+          new: true,
+        },
+      )
+      .lean()
 
     if (!updatedTodo) {
       throw new NotFoundError(`Todo with id ${todoId} not found`)
     }
 
-    return updatedTodo.toObject()
+    return updatedTodo
   }
 
   async deleteTodo(id: Types.ObjectId): Promise<void> {
