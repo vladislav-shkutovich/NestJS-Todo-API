@@ -11,12 +11,14 @@ import { UserDatabaseService } from './user.database.service'
 import { UserService } from './user.service'
 import type { Todo } from '../todos/schemas/todos.schema'
 import type { UpdateUserDto } from './dto/update-user.dto'
+import { UserChangeStreamDatabaseService } from './user.change-stream.database.service'
 
 describe('UserService', () => {
   let userService: UserService
   let userDatabaseService: DeepMocked<UserDatabaseService>
   let todosService: DeepMocked<TodosService>
   let _todosChangeStreamDatabaseService: DeepMocked<TodosChangeStreamDatabaseService>
+  let _userChangeStreamDatabaseService: DeepMocked<UserChangeStreamDatabaseService>
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -34,6 +36,10 @@ describe('UserService', () => {
           provide: TodosChangeStreamDatabaseService,
           useValue: createMock<TodosChangeStreamDatabaseService>(),
         },
+        {
+          provide: UserChangeStreamDatabaseService,
+          useValue: createMock<UserChangeStreamDatabaseService>(),
+        },
       ],
     }).compile()
 
@@ -44,6 +50,9 @@ describe('UserService', () => {
     _todosChangeStreamDatabaseService = module.get<
       DeepMocked<TodosChangeStreamDatabaseService>
     >(TodosChangeStreamDatabaseService)
+    _userChangeStreamDatabaseService = module.get<
+      DeepMocked<UserChangeStreamDatabaseService>
+    >(UserChangeStreamDatabaseService)
   })
 
   afterEach(() => {
